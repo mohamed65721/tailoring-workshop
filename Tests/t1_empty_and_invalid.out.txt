@@ -1,0 +1,301 @@
+Welcome to the Tailoring Order Workshop (CS212 Project 94).
+Tip: choose 20 to load sample data.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Error: please enter a whole number.
+Choose an option (0-20):   Error: value must be between 0 and 20.
+Choose an option (0-20):   Error: please enter a whole number.
+Choose an option (0-20):   No customers on file yet.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   No orders in the system.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   The order tree is empty.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   The sewing queue is empty (0/8).
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Nothing to sew: the sewing queue is empty.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   No finished alterations are waiting for pickup.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Nothing to rework: the finished stack is empty.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   ===== Workshop summary =====
+  Customers (linked list) : 0
+  Orders (BST)            : 0   tree height 0
+  Sewing queue            : 0/8
+  Finished stack          : 0
+  Status counts           : WAITING 0, COMPLETED 0, PICKED_UP 0
+  Revenue collected       : 0.00 EGP
+  Consistency check       : OK
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Order ID (1-99999):   Error: no order with ID 555.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Order ID being picked up (1-99999):   Error: no order with ID 555.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Order ID to delete (1-99999):   Error: no order with ID 555.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Customer ID (1-99999):   Error: no customer with ID 555.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Customer ID to delete (1-99999):   Error: no customer with ID 555.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Sort by 1) name  2) ID:   No customers to sort.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Current (wrong) order ID (1-99999):   Error: no order with ID 555.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20):   Order ID (1-99999):   Customer ID (1-99999):   Error: customer ID 200 does not exist. Add the customer first.
+
+================ TAILORING ORDER WORKSHOP ================
+ Customers (linked list)        Orders (BST by order ID)
+  1. Add customer                 7. Create order
+  2. List customers               8. Find order by ID
+  3. Find customer by ID          9. List orders (inorder)
+  4. Update customer             10. Show tree (preorder)
+  5. Delete customer             11. Update order details
+  6. Sort customers (merge sort) 12. Correct an order ID
+                                 13. Delete / cancel order
+ Workflow (queue -> stack)
+ 14. View sewing queue           17. Rework latest finished
+ 15. Sew next garment            18. Customer pickup
+ 16. View finished stack         19. Workshop summary
+ 20. Load sample data             0. Exit
+==========================================================
+Choose an option (0-20): Goodbye.
