@@ -9,7 +9,7 @@ This is a C++17 console application that runs a tailoring workshop. It keeps cus
 | **Linked list** | Customer records and their measurements. |
 | **BST** | Order lookup by unique order ID. This is the single source of truth for order details. |
 
-The full design, the algorithm (merge sort), the complexity analysis and the limitations are in **[Report/Report.md](Report/Report.md)**.
+The full design, the algorithm (merge sort), the complexity analysis and the limitations are in **[Report/CS212_Tailoring_Order_Workshop_Report.pdf](Report/CS212_Tailoring_Order_Workshop_Report.pdf)** (also provided as .docx).
 
 ## Repository layout
 
@@ -17,7 +17,7 @@ The full design, the algorithm (merge sort), the complexity analysis and the lim
 README.md          <- this file: how to run the program
 README.txt         <- the same instructions as plain text
 Source_Code/       <- all .cpp/.h files, the Visual Studio solution, tailor.exe, run.bat, build.bat
-Report/            <- project report
+Report/            <- project report (PDF and DOCX)
 Screenshots/       <- screenshots of the program running
 Tests/             <- test plan, test input scripts and their captured outputs
 ```

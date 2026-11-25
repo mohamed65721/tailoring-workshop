@@ -22,7 +22,7 @@ FOLDER LAYOUT
   README.md      the same information, shown on the GitHub page
   Source_Code/   all .cpp/.h files, the Visual Studio solution,
                  tailor.exe, run.bat, build.bat
-  Report/        project report
+  Report/        project report (PDF and DOCX)
   Screenshots/   screenshots of the program running
   Tests/         test plan (TEST_PLAN.md), test input scripts (*.txt)
                  and their captured outputs (*.out.txt)

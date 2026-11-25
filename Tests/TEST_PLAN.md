@@ -101,4 +101,4 @@ The captured output of each run is saved beside its input as `Tests/<name>.out.t
 
 ## Observation linked to the design limitation
 
-At the end of t3 the BST holds 8 orders but has **height 5**. Orders 8001 to 8004 were inserted in increasing order, so they form a right-leaning chain. This shows the unbalanced-BST limitation described in the Report (Report/Report.md).
+At the end of t3 the BST holds 8 orders but has **height 5**. Orders 8001 to 8004 were inserted in increasing order, so they form a right-leaning chain. This shows the unbalanced-BST limitation described in the project report (Report folder).
