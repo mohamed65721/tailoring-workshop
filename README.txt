@@ -22,6 +22,8 @@ FOLDER LAYOUT
   README.md      the same information, shown on the GitHub page
   Source_Code/   all .cpp/.h files, the Visual Studio solution,
                  tailor.exe, run.bat, build.bat
+                 Full_Code_All_Files.txt = all 13 source files in one
+                 file, for reading (build from the separate files)
   Report/        project report (PDF and DOCX)
   Screenshots/   screenshots of the program running
   Tests/         test plan (TEST_PLAN.md), test input scripts (*.txt)

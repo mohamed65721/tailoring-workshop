@@ -1,0 +1,1461 @@
+CS212 Project 94 - Tailoring Order Workshop: full source code (all 13 files, in reading order)
+Files: Order.h, Customer.h, Stack.h, Queue.h, CustomerList.h, CustomerList.cpp, OrderBST.h, OrderBST.cpp, InputUtils.h, InputUtils.cpp, Workshop.h, Workshop.cpp, main.cpp
+
+================================================================================
+// FILE: Order.h   (34 lines)
+================================================================================
+// Order.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Order record and its workflow status. The BST owns the only copy of each
+// Order; the queue and stack hold order IDs that point back into the BST.
+#ifndef ORDER_H
+#define ORDER_H
+
+#include <string>
+
+enum class OrderStatus {
+    WAITING,    // in the sewing queue
+    COMPLETED,  // sewn, on the "recently finished" stack, awaiting pickup
+    PICKED_UP   // handed to the customer; in neither queue nor stack
+};
+
+inline std::string statusToString(OrderStatus s) {
+    switch (s) {
+        case OrderStatus::WAITING:   return "WAITING";
+        case OrderStatus::COMPLETED: return "COMPLETED";
+        case OrderStatus::PICKED_UP: return "PICKED_UP";
+    }
+    return "UNKNOWN";
+}
+
+struct Order {
+    int id = 0;                 // unique key (1..99999)
+    int customerId = 0;         // must exist in the customer linked list
+    std::string garment;        // e.g. "Suit jacket"
+    std::string alteration;     // e.g. "Shorten sleeves 2 cm"
+    double price = 0.0;         // in EGP, 0..100000
+    OrderStatus status = OrderStatus::WAITING;
+};
+
+#endif // ORDER_H
+
+================================================================================
+// FILE: Customer.h   (24 lines)
+================================================================================
+// Customer.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Customer record with body measurements (stored in the linked list).
+#ifndef CUSTOMER_H
+#define CUSTOMER_H
+
+#include <string>
+
+struct Measurements {
+    double chest = 0.0;   // all values in centimetres
+    double waist = 0.0;
+    double hips = 0.0;
+    double inseam = 0.0;
+    double sleeve = 0.0;
+};
+
+struct Customer {
+    int id = 0;            // unique key (1..99999)
+    std::string name;
+    std::string phone;
+    Measurements m;
+};
+
+#endif // CUSTOMER_H
+
+================================================================================
+// FILE: Stack.h   (75 lines)
+================================================================================
+// Stack.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Manually implemented LIFO stack (singly linked nodes, no STL containers).
+// Used for "recently finished alterations": the most recently completed
+// order is on top, so quality-control rework always targets the newest one.
+#ifndef STACK_H
+#define STACK_H
+
+#include <stdexcept>
+
+template <typename T>
+class Stack {
+private:
+    struct Node {
+        T data;
+        Node* next;
+        Node(const T& d, Node* n) : data(d), next(n) {}
+    };
+    Node* topNode;
+    int count;
+
+public:
+    Stack() : topNode(nullptr), count(0) {}
+    ~Stack() { clear(); }
+
+    // Copying is disabled: the workshop owns exactly one stack.
+    Stack(const Stack&) = delete;
+    Stack& operator=(const Stack&) = delete;
+
+    // O(1)
+    void push(const T& value) {
+        topNode = new Node(value, topNode);
+        ++count;
+    }
+
+    // O(1). Throws std::underflow_error if the stack is empty.
+    T pop() {
+        if (isEmpty()) throw std::underflow_error("pop() on empty stack");
+        Node* old = topNode;
+        T value = old->data;
+        topNode = old->next;
+        delete old;
+        --count;
+        return value;
+    }
+
+    // O(1). Throws std::underflow_error if the stack is empty.
+    T peek() const {
+        if (isEmpty()) throw std::underflow_error("peek() on empty stack");
+        return topNode->data;
+    }
+
+    bool isEmpty() const { return topNode == nullptr; }
+    int size() const { return count; }
+
+    void clear() {
+        while (topNode != nullptr) {
+            Node* old = topNode;
+            topNode = topNode->next;
+            delete old;
+        }
+        count = 0;
+    }
+
+    // Read-only walk from top to bottom (for display). O(n)
+    template <typename Visitor>
+    void forEachTopDown(Visitor visit) const {
+        int position = 1;
+        for (Node* cur = topNode; cur != nullptr; cur = cur->next) {
+            visit(position++, cur->data);
+        }
+    }
+};
+
+#endif // STACK_H
+
+================================================================================
+// FILE: Queue.h   (67 lines)
+================================================================================
+// Queue.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Manually implemented FIFO queue on a fixed-size circular array.
+// Used for garments awaiting sewing. The fixed capacity models the limited
+// rack space in the workshop: when the rack is full, new orders are refused.
+#ifndef QUEUE_H
+#define QUEUE_H
+
+#include <stdexcept>
+
+template <typename T>
+class Queue {
+private:
+    T* items;
+    int capacity;
+    int frontIndex;   // index of the current front element
+    int count;        // number of stored elements
+
+public:
+    explicit Queue(int cap) : items(nullptr), capacity(cap), frontIndex(0), count(0) {
+        if (cap <= 0) throw std::invalid_argument("Queue capacity must be positive");
+        items = new T[cap];
+    }
+    ~Queue() { delete[] items; }
+
+    Queue(const Queue&) = delete;
+    Queue& operator=(const Queue&) = delete;
+
+    // O(1). Returns false (and stores nothing) if the queue is full.
+    bool enqueue(const T& value) {
+        if (isFull()) return false;
+        int rear = (frontIndex + count) % capacity;
+        items[rear] = value;
+        ++count;
+        return true;
+    }
+
+    // O(1). Throws std::underflow_error if the queue is empty.
+    T dequeue() {
+        if (isEmpty()) throw std::underflow_error("dequeue() on empty queue");
+        T value = items[frontIndex];
+        frontIndex = (frontIndex + 1) % capacity;
+        --count;
+        return value;
+    }
+
+    // O(1). Throws std::underflow_error if the queue is empty.
+    T front() const {
+        if (isEmpty()) throw std::underflow_error("front() on empty queue");
+        return items[frontIndex];
+    }
+
+    bool isEmpty() const { return count == 0; }
+    bool isFull() const { return count == capacity; }
+    int size() const { return count; }
+    int getCapacity() const { return capacity; }
+
+    // Read-only walk front-to-rear (for display). O(n)
+    template <typename Visitor>
+    void forEachFrontToRear(Visitor visit) const {
+        for (int i = 0; i < count; ++i) {
+            visit(i + 1, items[(frontIndex + i) % capacity]);
+        }
+    }
+};
+
+#endif // QUEUE_H
+
+================================================================================
+// FILE: CustomerList.h   (59 lines)
+================================================================================
+// CustomerList.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Manually implemented singly linked list of customers and their measurements.
+// Operations: insert, delete (remove), search, traverse, plus merge sort.
+#ifndef CUSTOMER_LIST_H
+#define CUSTOMER_LIST_H
+
+#include "Customer.h"
+
+enum class CustomerSortKey { BY_NAME, BY_ID };
+
+class CustomerList {
+private:
+    struct Node {
+        Customer data;
+        Node* next;
+        explicit Node(const Customer& c) : data(c), next(nullptr) {}
+    };
+    Node* head;
+    Node* tail;
+    int count;
+
+    // Merge sort helpers (operate on node chains, no extra arrays).
+    static bool lessThan(const Customer& a, const Customer& b, CustomerSortKey key);
+    static Node* split(Node* start);
+    static Node* merge(Node* a, Node* b, CustomerSortKey key);
+    static Node* mergeSort(Node* start, CustomerSortKey key);
+
+public:
+    CustomerList();
+    ~CustomerList();
+    CustomerList(const CustomerList&) = delete;
+    CustomerList& operator=(const CustomerList&) = delete;
+
+    // Appends at the tail. Returns false if the ID already exists. O(n) (dup check)
+    bool insert(const Customer& c);
+
+    // Removes the node with this ID (head, middle, tail or only node).
+    // Returns false if not found. O(n)
+    bool remove(int id);
+
+    // Linear search by ID. Returns nullptr if not found. O(n)
+    Customer* search(int id);
+    const Customer* search(int id) const;
+
+    // Visits every customer from head to tail. O(n)
+    template <typename Visitor>
+    void traverse(Visitor visit) const {
+        for (Node* cur = head; cur != nullptr; cur = cur->next) visit(cur->data);
+    }
+
+    // Stable in-place merge sort of the list. O(n log n) time, O(log n) stack.
+    void sort(CustomerSortKey key);
+
+    bool isEmpty() const { return head == nullptr; }
+    int size() const { return count; }
+};
+
+#endif // CUSTOMER_LIST_H
+
+================================================================================
+// FILE: CustomerList.cpp   (117 lines)
+================================================================================
+// CustomerList.cpp
+// CS212 Project 94 - Tailoring Order Workshop
+#include "CustomerList.h"
+
+#include <cctype>
+#include <string>
+
+CustomerList::CustomerList() : head(nullptr), tail(nullptr), count(0) {}
+
+CustomerList::~CustomerList() {
+    while (head != nullptr) {
+        Node* old = head;
+        head = head->next;
+        delete old;
+    }
+}
+
+bool CustomerList::insert(const Customer& c) {
+    if (search(c.id) != nullptr) return false;   // duplicate ID policy: reject
+    Node* node = new Node(c);
+    if (head == nullptr) {
+        head = tail = node;
+    } else {
+        tail->next = node;
+        tail = node;
+    }
+    ++count;
+    return true;
+}
+
+bool CustomerList::remove(int id) {
+    Node* prev = nullptr;
+    Node* cur = head;
+    while (cur != nullptr && cur->data.id != id) {
+        prev = cur;
+        cur = cur->next;
+    }
+    if (cur == nullptr) return false;            // not found (also covers empty list)
+
+    if (prev == nullptr) head = cur->next;       // deleting the first node
+    else prev->next = cur->next;
+
+    if (cur == tail) tail = prev;                // deleting the last node
+    delete cur;
+    --count;
+    return true;                                 // only-node case: head = tail = nullptr
+}
+
+Customer* CustomerList::search(int id) {
+    for (Node* cur = head; cur != nullptr; cur = cur->next)
+        if (cur->data.id == id) return &cur->data;
+    return nullptr;
+}
+
+const Customer* CustomerList::search(int id) const {
+    for (Node* cur = head; cur != nullptr; cur = cur->next)
+        if (cur->data.id == id) return &cur->data;
+    return nullptr;
+}
+
+// ----------------------------- merge sort ---------------------------------
+
+static std::string lowerCopy(const std::string& s) {
+    std::string r = s;
+    for (char& ch : r) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    return r;
+}
+
+bool CustomerList::lessThan(const Customer& a, const Customer& b, CustomerSortKey key) {
+    if (key == CustomerSortKey::BY_ID) return a.id < b.id;
+    std::string na = lowerCopy(a.name), nb = lowerCopy(b.name);
+    if (na != nb) return na < nb;
+    return a.id < b.id;  // tie-break so the order is fully deterministic
+}
+
+// Splits the chain in half using slow/fast pointers; returns the second half.
+CustomerList::Node* CustomerList::split(Node* start) {
+    Node* slow = start;
+    Node* fast = start->next;
+    while (fast != nullptr && fast->next != nullptr) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    Node* second = slow->next;
+    slow->next = nullptr;
+    return second;
+}
+
+// Merges two sorted chains. Takes from 'a' on ties, which keeps the sort stable.
+CustomerList::Node* CustomerList::merge(Node* a, Node* b, CustomerSortKey key) {
+    Node dummy{Customer{}};
+    Node* tailPtr = &dummy;
+    while (a != nullptr && b != nullptr) {
+        if (lessThan(b->data, a->data, key)) {
+            tailPtr->next = b;
+            b = b->next;
+        } else {
+            tailPtr->next = a;
+            a = a->next;
+        }
+        tailPtr = tailPtr->next;
+    }
+    tailPtr->next = (a != nullptr) ? a : b;
+    return dummy.next;
+}
+
+CustomerList::Node* CustomerList::mergeSort(Node* start, CustomerSortKey key) {
+    if (start == nullptr || start->next == nullptr) return start;  // 0 or 1 node
+    Node* second = split(start);
+    return merge(mergeSort(start, key), mergeSort(second, key), key);
+}
+
+void CustomerList::sort(CustomerSortKey key) {
+    head = mergeSort(head, key);
+    tail = head;                                  // re-establish the tail pointer
+    while (tail != nullptr && tail->next != nullptr) tail = tail->next;
+}
+
+================================================================================
+// FILE: OrderBST.h   (74 lines)
+================================================================================
+// OrderBST.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Manually implemented binary search tree of orders keyed by unique order ID.
+// The BST is the single source of truth for order details.
+//
+// Duplicate-ID policy: IDs are unique. insert() REJECTS a duplicate ID and
+// returns false; the existing order is left unchanged.
+#ifndef ORDER_BST_H
+#define ORDER_BST_H
+
+#include "Order.h"
+
+class OrderBST {
+private:
+    struct Node {
+        Order data;
+        Node* left;
+        Node* right;
+        explicit Node(const Order& o) : data(o), left(nullptr), right(nullptr) {}
+    };
+    Node* root;
+    int count;
+
+    static void destroy(Node* n);
+    static Node* removeNode(Node* n, int id, bool& removed);
+    static Node* minNode(Node* n);
+    static int heightOf(const Node* n);
+
+    template <typename Visitor>
+    static void inorderRec(const Node* n, Visitor& visit) {
+        if (n == nullptr) return;
+        inorderRec(n->left, visit);
+        visit(n->data);
+        inorderRec(n->right, visit);
+    }
+
+    template <typename Visitor>
+    static void preorderRec(const Node* n, int depth, Visitor& visit) {
+        if (n == nullptr) return;
+        visit(n->data, depth);
+        preorderRec(n->left, depth + 1, visit);
+        preorderRec(n->right, depth + 1, visit);
+    }
+
+public:
+    OrderBST();
+    ~OrderBST();
+    OrderBST(const OrderBST&) = delete;
+    OrderBST& operator=(const OrderBST&) = delete;
+
+    // O(h). Returns false if the ID already exists (duplicate rejected).
+    bool insert(const Order& o);
+
+    // O(h). Returns false if the ID is not in the tree.
+    bool remove(int id);
+
+    // O(h). Returns nullptr if not found.
+    Order* search(int id);
+    const Order* search(int id) const;
+
+    // Inorder: visits orders in ascending ID order. O(n)
+    template <typename Visitor>
+    void inorder(Visitor visit) const { inorderRec(root, visit); }
+
+    // Preorder: root, left, right; also passes the depth for an indented view. O(n)
+    template <typename Visitor>
+    void preorder(Visitor visit) const { preorderRec(root, 0, visit); }
+
+    bool isEmpty() const { return root == nullptr; }
+    int size() const { return count; }
+    int height() const { return heightOf(root); }   // empty = 0, single node = 1
+};
+
+#endif // ORDER_BST_H
+
+================================================================================
+// FILE: OrderBST.cpp   (94 lines)
+================================================================================
+// OrderBST.cpp
+// CS212 Project 94 - Tailoring Order Workshop
+#include "OrderBST.h"
+
+OrderBST::OrderBST() : root(nullptr), count(0) {}
+
+OrderBST::~OrderBST() { destroy(root); }
+
+void OrderBST::destroy(Node* n) {
+    if (n == nullptr) return;
+    destroy(n->left);
+    destroy(n->right);
+    delete n;
+}
+
+bool OrderBST::insert(const Order& o) {
+    Node* parent = nullptr;
+    Node* cur = root;
+    while (cur != nullptr) {
+        if (o.id == cur->data.id) return false;   // duplicate ID -> reject
+        parent = cur;
+        cur = (o.id < cur->data.id) ? cur->left : cur->right;
+    }
+    Node* node = new Node(o);
+    if (parent == nullptr) root = node;
+    else if (o.id < parent->data.id) parent->left = node;
+    else parent->right = node;
+    ++count;
+    return true;
+}
+
+OrderBST::Node* OrderBST::minNode(Node* n) {
+    while (n != nullptr && n->left != nullptr) n = n->left;
+    return n;
+}
+
+// Recursive delete. Handles: leaf, one child, two children (inorder successor),
+// and the root-only tree (returns nullptr so root becomes empty).
+OrderBST::Node* OrderBST::removeNode(Node* n, int id, bool& removed) {
+    if (n == nullptr) return nullptr;
+    if (id < n->data.id) {
+        n->left = removeNode(n->left, id, removed);
+    } else if (id > n->data.id) {
+        n->right = removeNode(n->right, id, removed);
+    } else {
+        removed = true;
+        if (n->left == nullptr) {
+            Node* r = n->right;
+            delete n;
+            return r;
+        }
+        if (n->right == nullptr) {
+            Node* l = n->left;
+            delete n;
+            return l;
+        }
+        Node* succ = minNode(n->right);          // two children
+        n->data = succ->data;
+        bool dummy = false;
+        n->right = removeNode(n->right, succ->data.id, dummy);
+    }
+    return n;
+}
+
+bool OrderBST::remove(int id) {
+    bool removed = false;
+    root = removeNode(root, id, removed);
+    if (removed) --count;
+    return removed;
+}
+
+Order* OrderBST::search(int id) {
+    Node* cur = root;
+    while (cur != nullptr) {
+        if (id == cur->data.id) return &cur->data;
+        cur = (id < cur->data.id) ? cur->left : cur->right;
+    }
+    return nullptr;
+}
+
+const Order* OrderBST::search(int id) const {
+    const Node* cur = root;
+    while (cur != nullptr) {
+        if (id == cur->data.id) return &cur->data;
+        cur = (id < cur->data.id) ? cur->left : cur->right;
+    }
+    return nullptr;
+}
+
+int OrderBST::heightOf(const Node* n) {
+    if (n == nullptr) return 0;
+    int lh = heightOf(n->left), rh = heightOf(n->right);
+    return 1 + (lh > rh ? lh : rh);
+}
+
+================================================================================
+// FILE: InputUtils.h   (33 lines)
+================================================================================
+// InputUtils.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Line-based, validated console input. Every read consumes a whole line, so a
+// bad entry (letters, empty line, out of range) never leaves junk in std::cin.
+#ifndef INPUT_UTILS_H
+#define INPUT_UTILS_H
+
+#include <stdexcept>
+#include <string>
+
+// Thrown when standard input ends (Ctrl+Z / Ctrl+D or end of a redirected file),
+// so the program can shut down cleanly instead of looping forever.
+class InputEnded : public std::runtime_error {
+public:
+    InputEnded() : std::runtime_error("input ended") {}
+};
+
+// Re-prompts until the user types a whole integer in [minVal, maxVal].
+int readInt(const std::string& prompt, int minVal, int maxVal);
+
+// Re-prompts until the user types a number in [minVal, maxVal].
+double readDouble(const std::string& prompt, double minVal, double maxVal);
+
+// Re-prompts until a non-empty line (after trimming) of at most maxLen chars.
+std::string readNonEmptyLine(const std::string& prompt, std::size_t maxLen = 60);
+
+// Reads a line; an empty line means "keep current value" and returns false.
+bool readOptionalLine(const std::string& prompt, std::string& out, std::size_t maxLen = 60);
+
+// Reads y/n (case-insensitive). Re-prompts on anything else.
+bool readYesNo(const std::string& prompt);
+
+#endif // INPUT_UTILS_H
+
+================================================================================
+// FILE: InputUtils.cpp   (96 lines)
+================================================================================
+// InputUtils.cpp
+// CS212 Project 94 - Tailoring Order Workshop
+#include "InputUtils.h"
+
+#include <cmath>
+#include <iostream>
+#include <sstream>
+
+static std::string trim(const std::string& s) {
+    std::size_t b = s.find_first_not_of(" \t\r\n");
+    if (b == std::string::npos) return "";
+    std::size_t e = s.find_last_not_of(" \t\r\n");
+    return s.substr(b, e - b + 1);
+}
+
+static std::string getLineOrThrow(const std::string& prompt) {
+    std::cout << prompt;
+    std::string line;
+    if (!std::getline(std::cin, line)) throw InputEnded();
+    // Windows editors/shells may prefix redirected input with a UTF-8 byte-order mark.
+    if (line.size() >= 3 && line.compare(0, 3, "\xEF\xBB\xBF") == 0) line.erase(0, 3);
+    return trim(line);
+}
+
+int readInt(const std::string& prompt, int minVal, int maxVal) {
+    while (true) {
+        std::string line = getLineOrThrow(prompt);
+        std::istringstream iss(line);
+        long long value;
+        char extra;
+        if (line.empty() || !(iss >> value) || (iss >> extra)) {
+            std::cout << "  Error: please enter a whole number.\n";
+            continue;
+        }
+        if (value < minVal || value > maxVal) {
+            std::cout << "  Error: value must be between " << minVal << " and " << maxVal << ".\n";
+            continue;
+        }
+        return static_cast<int>(value);
+    }
+}
+
+double readDouble(const std::string& prompt, double minVal, double maxVal) {
+    while (true) {
+        std::string line = getLineOrThrow(prompt);
+        std::istringstream iss(line);
+        double value;
+        char extra;
+        if (line.empty() || !(iss >> value) || (iss >> extra) || !std::isfinite(value)) {
+            std::cout << "  Error: please enter a number (e.g. 42 or 42.5).\n";
+            continue;
+        }
+        if (value < minVal || value > maxVal) {
+            std::cout << "  Error: value must be between " << minVal << " and " << maxVal << ".\n";
+            continue;
+        }
+        return value;
+    }
+}
+
+std::string readNonEmptyLine(const std::string& prompt, std::size_t maxLen) {
+    while (true) {
+        std::string line = getLineOrThrow(prompt);
+        if (line.empty()) {
+            std::cout << "  Error: this field cannot be empty.\n";
+            continue;
+        }
+        if (line.size() > maxLen) {
+            std::cout << "  Error: maximum length is " << maxLen << " characters.\n";
+            continue;
+        }
+        return line;
+    }
+}
+
+bool readOptionalLine(const std::string& prompt, std::string& out, std::size_t maxLen) {
+    while (true) {
+        std::string line = getLineOrThrow(prompt);
+        if (line.empty()) return false;
+        if (line.size() > maxLen) {
+            std::cout << "  Error: maximum length is " << maxLen << " characters.\n";
+            continue;
+        }
+        out = line;
+        return true;
+    }
+}
+
+bool readYesNo(const std::string& prompt) {
+    while (true) {
+        std::string line = getLineOrThrow(prompt);
+        if (line == "y" || line == "Y" || line == "yes" || line == "YES") return true;
+        if (line == "n" || line == "N" || line == "no" || line == "NO") return false;
+        std::cout << "  Error: please answer y or n.\n";
+    }
+}
+
+================================================================================
+// FILE: Workshop.h   (83 lines)
+================================================================================
+// Workshop.h
+// CS212 Project 94 - Tailoring Order Workshop
+// Coordinator that owns all four data structures and keeps them consistent.
+//
+// Invariants maintained by every public operation:
+//   I1. Every order lives exactly once in the BST (single source of truth).
+//   I2. status == WAITING   <=> the order ID is in the sewing queue (once).
+//   I3. status == COMPLETED <=> the order ID is on the finished stack (once).
+//   I4. status == PICKED_UP  => the ID is in neither the queue nor the stack.
+//   I5. Every order's customerId exists in the customer linked list.
+#ifndef WORKSHOP_H
+#define WORKSHOP_H
+
+#include "Customer.h"
+#include "CustomerList.h"
+#include "Order.h"
+#include "OrderBST.h"
+#include "Queue.h"
+#include "Stack.h"
+
+#include <string>
+
+class Workshop {
+public:
+    static const int QUEUE_CAPACITY = 8;   // sewing rack holds 8 garments
+    static const int MIN_ID = 1;
+    static const int MAX_ID = 99999;
+
+    Workshop();
+
+    // ---- Customers (linked list) ----
+    bool addCustomer(const Customer& c);
+    void listCustomers() const;
+    bool showCustomer(int id) const;               // details + that customer's orders
+    Customer* findCustomer(int id);
+    bool deleteCustomer(int id);
+    void sortCustomers(CustomerSortKey key);
+
+    // ---- Orders (BST) ----
+    bool createOrder(const Order& o);              // BST insert + enqueue
+    bool showOrder(int id) const;
+    Order* findOrder(int id);
+    void listOrdersInorder() const;
+    void showTreePreorder() const;
+    bool updateOrder(int id, const std::string* garment, const std::string* alteration,
+                     const double* price, const int* customerId);
+    bool changeOrderId(int oldId, int newId);      // scenario: correction
+    bool deleteOrder(int id);                      // removes from every structure
+
+    // ---- Workflow (queue + stack) ----
+    void showQueue() const;
+    bool sewNext();                                // scenario: dequeue -> complete -> push
+    void showFinished() const;
+    bool reworkLatest();                           // scenario: pop -> back into queue
+    bool pickUp(int id);                           // COMPLETED -> PICKED_UP
+
+    void showSummary() const;
+    bool checkConsistency(bool verbose) const;
+    void loadSampleData();
+
+    int queueSize() const { return sewingQueue.size(); }
+    int finishedSize() const { return finished.size(); }
+
+private:
+    CustomerList customers;
+    OrderBST orders;
+    Queue<int> sewingQueue;
+    Stack<int> finished;
+
+    // Helpers built only from the public queue/stack operations.
+    bool removeFromQueue(int id);
+    bool replaceInQueue(int oldId, int newId);
+    int positionInQueue(int id) const;
+    bool removeFromStack(int id);
+    bool replaceInStack(int oldId, int newId);
+
+    int countOrdersForCustomer(int customerId) const;
+    static void printOrderHeader();
+    static void printOrderRow(const Order& o);
+    static void printCustomer(const Customer& c);
+};
+
+#endif // WORKSHOP_H
+
+================================================================================
+// FILE: Workshop.cpp   (463 lines)
+================================================================================
+// Workshop.cpp
+// CS212 Project 94 - Tailoring Order Workshop
+#include "Workshop.h"
+
+#include <iomanip>
+#include <iostream>
+
+using std::cout;
+
+Workshop::Workshop() : sewingQueue(QUEUE_CAPACITY) {}
+
+// =========================== display helpers ==============================
+
+void Workshop::printCustomer(const Customer& c) {
+    cout << "  #" << std::left << std::setw(6) << c.id << std::setw(20) << c.name
+         << std::setw(14) << c.phone << std::right << std::fixed << std::setprecision(1)
+         << " chest " << c.m.chest << " | waist " << c.m.waist << " | hips " << c.m.hips
+         << " | inseam " << c.m.inseam << " | sleeve " << c.m.sleeve << " (cm)\n";
+}
+
+void Workshop::printOrderHeader() {
+    cout << "  " << std::left << std::setw(7) << "ID" << std::setw(7) << "Cust"
+         << std::setw(18) << "Garment" << std::setw(32) << "Alteration"
+         << std::setw(10) << "Price" << "Status\n"
+         << "  " << std::string(84, '-') << "\n" << std::right;
+}
+
+void Workshop::printOrderRow(const Order& o) {
+    cout << "  " << std::left << std::setw(7) << o.id << std::setw(7) << o.customerId
+         << std::setw(18) << o.garment.substr(0, 17) << std::setw(32) << o.alteration.substr(0, 31)
+         << std::setw(10) << std::fixed << std::setprecision(2) << o.price
+         << statusToString(o.status) << "\n" << std::right;
+}
+
+// ============================== customers =================================
+
+bool Workshop::addCustomer(const Customer& c) {
+    if (!customers.insert(c)) {
+        cout << "  Error: customer ID " << c.id << " already exists. Duplicate IDs are not allowed.\n";
+        return false;
+    }
+    cout << "  Customer #" << c.id << " (" << c.name << ") added. Customers on file: "
+         << customers.size() << "\n";
+    return true;
+}
+
+void Workshop::listCustomers() const {
+    if (customers.isEmpty()) {
+        cout << "  No customers on file yet.\n";
+        return;
+    }
+    cout << "  Customers (" << customers.size() << "), in list order:\n";
+    customers.traverse([](const Customer& c) { printCustomer(c); });
+}
+
+bool Workshop::showCustomer(int id) const {
+    const Customer* c = customers.search(id);
+    if (c == nullptr) {
+        cout << "  Error: no customer with ID " << id << ".\n";
+        return false;
+    }
+    printCustomer(*c);
+    int n = countOrdersForCustomer(id);
+    if (n == 0) {
+        cout << "  This customer has no orders.\n";
+    } else {
+        cout << "  Orders for this customer (" << n << "):\n";
+        printOrderHeader();
+        orders.inorder([id](const Order& o) { if (o.customerId == id) printOrderRow(o); });
+    }
+    return true;
+}
+
+Customer* Workshop::findCustomer(int id) { return customers.search(id); }
+
+bool Workshop::deleteCustomer(int id) {
+    if (customers.search(id) == nullptr) {
+        cout << "  Error: no customer with ID " << id << ".\n";
+        return false;
+    }
+    int n = countOrdersForCustomer(id);
+    if (n > 0) {
+        cout << "  Error: customer #" << id << " still has " << n
+             << " order(s). Delete those orders first to keep records consistent.\n";
+        return false;
+    }
+    customers.remove(id);
+    cout << "  Customer #" << id << " deleted. Customers on file: " << customers.size() << "\n";
+    return true;
+}
+
+void Workshop::sortCustomers(CustomerSortKey key) {
+    if (customers.isEmpty()) {
+        cout << "  No customers to sort.\n";
+        return;
+    }
+    customers.sort(key);
+    cout << "  Merge sort complete (" << customers.size() << " customers, by "
+         << (key == CustomerSortKey::BY_NAME ? "name" : "ID") << "):\n";
+    customers.traverse([](const Customer& c) { printCustomer(c); });
+}
+
+int Workshop::countOrdersForCustomer(int customerId) const {
+    int n = 0;
+    orders.inorder([&n, customerId](const Order& o) { if (o.customerId == customerId) ++n; });
+    return n;
+}
+
+// ================================ orders ==================================
+
+bool Workshop::createOrder(const Order& o) {
+    if (customers.search(o.customerId) == nullptr) {
+        cout << "  Error: customer ID " << o.customerId
+             << " does not exist. Add the customer first.\n";
+        return false;
+    }
+    if (orders.search(o.id) != nullptr) {
+        cout << "  Error: order ID " << o.id << " already exists. Duplicate IDs are rejected.\n";
+        return false;
+    }
+    if (sewingQueue.isFull()) {   // check before touching the BST so nothing is half-done
+        cout << "  Error: sewing rack is full (" << QUEUE_CAPACITY
+             << " garments). Sew some garments before accepting new orders.\n";
+        return false;
+    }
+    Order copy = o;
+    copy.status = OrderStatus::WAITING;
+    orders.insert(copy);
+    sewingQueue.enqueue(copy.id);
+    cout << "  Order #" << copy.id << " created and placed in the sewing queue (position "
+         << sewingQueue.size() << " of " << sewingQueue.size() << ").\n";
+    return true;
+}
+
+bool Workshop::showOrder(int id) const {
+    const Order* o = orders.search(id);
+    if (o == nullptr) {
+        cout << "  Error: no order with ID " << id << ".\n";
+        return false;
+    }
+    printOrderHeader();
+    printOrderRow(*o);
+    const Customer* c = customers.search(o->customerId);
+    if (c != nullptr) cout << "  Customer: " << c->name << " (" << c->phone << ")\n";
+    if (o->status == OrderStatus::WAITING)
+        cout << "  Location: sewing queue, position " << positionInQueue(id) << " of "
+             << sewingQueue.size() << "\n";
+    else if (o->status == OrderStatus::COMPLETED)
+        cout << "  Location: finished rack, waiting for pickup\n";
+    else
+        cout << "  Location: delivered to customer\n";
+    return true;
+}
+
+Order* Workshop::findOrder(int id) { return orders.search(id); }
+
+void Workshop::listOrdersInorder() const {
+    if (orders.isEmpty()) {
+        cout << "  No orders in the system.\n";
+        return;
+    }
+    cout << "  All orders, inorder traversal (ascending ID) - " << orders.size() << " total:\n";
+    printOrderHeader();
+    orders.inorder([](const Order& o) { printOrderRow(o); });
+}
+
+void Workshop::showTreePreorder() const {
+    if (orders.isEmpty()) {
+        cout << "  The order tree is empty.\n";
+        return;
+    }
+    cout << "  Preorder traversal (indent = depth). Nodes: " << orders.size()
+         << ", height: " << orders.height() << "\n";
+    orders.preorder([](const Order& o, int depth) {
+        cout << "  " << std::string(depth * 4, ' ') << "[" << o.id << "] "
+             << o.garment << " (" << statusToString(o.status) << ")\n";
+    });
+}
+
+bool Workshop::updateOrder(int id, const std::string* garment, const std::string* alteration,
+                           const double* price, const int* customerId) {
+    Order* o = orders.search(id);
+    if (o == nullptr) {
+        cout << "  Error: no order with ID " << id << ".\n";
+        return false;
+    }
+    if (o->status == OrderStatus::PICKED_UP) {
+        cout << "  Error: order #" << id << " was already picked up; archived orders cannot be edited.\n";
+        return false;
+    }
+    if (customerId != nullptr && customers.search(*customerId) == nullptr) {
+        cout << "  Error: customer ID " << *customerId << " does not exist. No changes made.\n";
+        return false;
+    }
+    if (garment != nullptr) o->garment = *garment;
+    if (alteration != nullptr) o->alteration = *alteration;
+    if (price != nullptr) o->price = *price;
+    if (customerId != nullptr) o->customerId = *customerId;
+    cout << "  Order #" << id << " updated:\n";
+    printOrderHeader();
+    printOrderRow(*o);
+    return true;
+}
+
+// Scenario: an order was registered under the wrong ID. The key changes, so the
+// BST node must be removed and re-inserted, and the copy of the ID held in the
+// queue or stack is rewritten IN PLACE so the order keeps its position.
+bool Workshop::changeOrderId(int oldId, int newId) {
+    Order* o = orders.search(oldId);
+    if (o == nullptr) {
+        cout << "  Error: no order with ID " << oldId << ".\n";
+        return false;
+    }
+    if (oldId == newId) {
+        cout << "  Error: the new ID is the same as the old ID. Nothing changed.\n";
+        return false;
+    }
+    if (orders.search(newId) != nullptr) {
+        cout << "  Error: order ID " << newId << " is already in use. Duplicate IDs are rejected.\n";
+        return false;
+    }
+    Order copy = *o;
+    copy.id = newId;
+    orders.remove(oldId);
+    orders.insert(copy);
+
+    std::string where = "BST only (order is picked up)";
+    if (copy.status == OrderStatus::WAITING) {
+        replaceInQueue(oldId, newId);
+        where = "BST + sewing queue (position " + std::to_string(positionInQueue(newId)) + " kept)";
+    } else if (copy.status == OrderStatus::COMPLETED) {
+        replaceInStack(oldId, newId);
+        where = "BST + finished stack (position kept)";
+    }
+    cout << "  Order #" << oldId << " is now #" << newId << ". Updated: " << where << ".\n";
+    return true;
+}
+
+bool Workshop::deleteOrder(int id) {
+    const Order* o = orders.search(id);
+    if (o == nullptr) {
+        cout << "  Error: no order with ID " << id << ".\n";
+        return false;
+    }
+    std::string where = "BST";
+    if (o->status == OrderStatus::WAITING) {
+        removeFromQueue(id);
+        where += " + sewing queue";
+    } else if (o->status == OrderStatus::COMPLETED) {
+        removeFromStack(id);
+        where += " + finished stack";
+    }
+    orders.remove(id);
+    cout << "  Order #" << id << " deleted from " << where << ". Orders remaining: "
+         << orders.size() << "\n";
+    return true;
+}
+
+// =============================== workflow =================================
+
+void Workshop::showQueue() const {
+    if (sewingQueue.isEmpty()) {
+        cout << "  The sewing queue is empty (0/" << QUEUE_CAPACITY << ").\n";
+        return;
+    }
+    cout << "  Sewing queue (" << sewingQueue.size() << "/" << QUEUE_CAPACITY
+         << "), front first:\n";
+    const OrderBST& tree = orders;
+    sewingQueue.forEachFrontToRear([&tree](int pos, int id) {
+        const Order* o = tree.search(id);
+        cout << "   " << pos << ". #" << id;
+        if (o != nullptr) cout << "  " << o->garment << " - " << o->alteration;
+        cout << "\n";
+    });
+}
+
+bool Workshop::sewNext() {
+    if (sewingQueue.isEmpty()) {
+        cout << "  Nothing to sew: the sewing queue is empty.\n";
+        return false;
+    }
+    int id = sewingQueue.dequeue();
+    Order* o = orders.search(id);
+    if (o == nullptr) {   // cannot happen while the invariants hold
+        cout << "  Internal error: queued order #" << id << " not found in BST.\n";
+        return false;
+    }
+    o->status = OrderStatus::COMPLETED;
+    finished.push(id);
+    cout << "  Sewed order #" << id << " (" << o->garment << ": " << o->alteration << ").\n"
+         << "  Status -> COMPLETED. Pushed onto finished stack (size " << finished.size()
+         << "). Queue now holds " << sewingQueue.size() << ".\n";
+    return true;
+}
+
+void Workshop::showFinished() const {
+    if (finished.isEmpty()) {
+        cout << "  No finished alterations are waiting for pickup.\n";
+        return;
+    }
+    cout << "  Recently finished alterations (" << finished.size() << "), most recent first:\n";
+    const OrderBST& tree = orders;
+    finished.forEachTopDown([&tree](int pos, int id) {
+        const Order* o = tree.search(id);
+        cout << "   " << pos << ". #" << id;
+        if (o != nullptr) cout << "  " << o->garment << " - " << o->alteration;
+        if (pos == 1) cout << "   <- top";
+        cout << "\n";
+    });
+}
+
+// Scenario: quality control rejects the most recently finished garment (LIFO).
+bool Workshop::reworkLatest() {
+    if (finished.isEmpty()) {
+        cout << "  Nothing to rework: the finished stack is empty.\n";
+        return false;
+    }
+    if (sewingQueue.isFull()) {
+        cout << "  Error: sewing queue is full; cannot send order #" << finished.peek()
+             << " back for rework right now.\n";
+        return false;
+    }
+    int id = finished.pop();
+    Order* o = orders.search(id);
+    o->status = OrderStatus::WAITING;
+    sewingQueue.enqueue(id);
+    cout << "  Order #" << id << " failed quality check: popped from finished stack and "
+         << "re-queued for sewing (position " << sewingQueue.size() << ").\n";
+    return true;
+}
+
+bool Workshop::pickUp(int id) {
+    Order* o = orders.search(id);
+    if (o == nullptr) {
+        cout << "  Error: no order with ID " << id << ".\n";
+        return false;
+    }
+    if (o->status == OrderStatus::WAITING) {
+        cout << "  Error: order #" << id << " is not sewn yet (queue position "
+             << positionInQueue(id) << ").\n";
+        return false;
+    }
+    if (o->status == OrderStatus::PICKED_UP) {
+        cout << "  Error: order #" << id << " was already picked up.\n";
+        return false;
+    }
+    removeFromStack(id);
+    o->status = OrderStatus::PICKED_UP;
+    cout << "  Order #" << id << " handed to the customer. Amount due: " << std::fixed
+         << std::setprecision(2) << o->price << " EGP. Status -> PICKED_UP.\n";
+    return true;
+}
+
+void Workshop::showSummary() const {
+    int waiting = 0, completed = 0, picked = 0;
+    double revenue = 0.0;
+    orders.inorder([&](const Order& o) {
+        if (o.status == OrderStatus::WAITING) ++waiting;
+        else if (o.status == OrderStatus::COMPLETED) ++completed;
+        else { ++picked; revenue += o.price; }
+    });
+    cout << "  ===== Workshop summary =====\n"
+         << "  Customers (linked list) : " << customers.size() << "\n"
+         << "  Orders (BST)            : " << orders.size() << "   tree height " << orders.height() << "\n"
+         << "  Sewing queue            : " << sewingQueue.size() << "/" << QUEUE_CAPACITY
+         << (sewingQueue.isFull() ? "  (FULL)" : "") << "\n"
+         << "  Finished stack          : " << finished.size() << "\n"
+         << "  Status counts           : WAITING " << waiting << ", COMPLETED " << completed
+         << ", PICKED_UP " << picked << "\n"
+         << "  Revenue collected       : " << std::fixed << std::setprecision(2) << revenue << " EGP\n";
+    checkConsistency(true);
+}
+
+bool Workshop::checkConsistency(bool verbose) const {
+    bool ok = true;
+    int waiting = 0, completed = 0;
+    const OrderBST& tree = orders;
+    const CustomerList& list = customers;
+    orders.inorder([&](const Order& o) {
+        if (o.status == OrderStatus::WAITING) ++waiting;
+        if (o.status == OrderStatus::COMPLETED) ++completed;
+        if (list.search(o.customerId) == nullptr) ok = false;   // I5
+    });
+    if (waiting != sewingQueue.size() || completed != finished.size()) ok = false;  // I2, I3
+    sewingQueue.forEachFrontToRear([&](int, int id) {
+        const Order* o = tree.search(id);
+        if (o == nullptr || o->status != OrderStatus::WAITING) ok = false;
+    });
+    finished.forEachTopDown([&](int, int id) {
+        const Order* o = tree.search(id);
+        if (o == nullptr || o->status != OrderStatus::COMPLETED) ok = false;
+    });
+    if (verbose) cout << "  Consistency check       : " << (ok ? "OK" : "FAILED") << "\n";
+    return ok;
+}
+
+void Workshop::loadSampleData() {
+    cout << "  Loading sample data (duplicates are rejected, so loading twice is safe)...\n";
+    addCustomer({101, "Mona Hassan",  "01001234567", {92, 74, 98, 78, 58}});
+    addCustomer({102, "Ahmed Fathy",  "01112223334", {104, 90, 100, 82, 63}});
+    addCustomer({103, "Sara Adel",    "01223344556", {86, 68, 94, 76, 56}});
+    addCustomer({104, "Karim Nabil",  "01556677889", {110, 96, 104, 84, 65}});
+    createOrder({5005, 102, "Suit jacket",   "Shorten sleeves 2 cm", 350.0, OrderStatus::WAITING});
+    createOrder({3003, 101, "Evening dress", "Take in waist 3 cm",   420.0, OrderStatus::WAITING});
+    createOrder({7007, 103, "Jeans",         "Hem to 76 cm inseam",  120.0, OrderStatus::WAITING});
+    createOrder({2002, 104, "Shirt",         "Slim fit sides",       180.0, OrderStatus::WAITING});
+    createOrder({6006, 101, "Coat",          "Replace lining",       650.0, OrderStatus::WAITING});
+}
+
+// ===================== queue / stack consistency helpers ==================
+// These use only enqueue/dequeue/size and push/pop/isEmpty, so the ADTs stay pure.
+
+bool Workshop::removeFromQueue(int id) {
+    bool found = false;
+    int n = sewingQueue.size();
+    for (int i = 0; i < n; ++i) {
+        int x = sewingQueue.dequeue();
+        if (x == id && !found) found = true;      // drop it
+        else sewingQueue.enqueue(x);              // rotate the rest, order preserved
+    }
+    return found;
+}
+
+bool Workshop::replaceInQueue(int oldId, int newId) {
+    bool found = false;
+    int n = sewingQueue.size();
+    for (int i = 0; i < n; ++i) {
+        int x = sewingQueue.dequeue();
+        if (x == oldId) { x = newId; found = true; }
+        sewingQueue.enqueue(x);
+    }
+    return found;
+}
+
+int Workshop::positionInQueue(int id) const {
+    int position = -1;
+    sewingQueue.forEachFrontToRear([&](int pos, int x) { if (x == id && position == -1) position = pos; });
+    return position;
+}
+
+bool Workshop::removeFromStack(int id) {
+    Stack<int> temp;
+    bool found = false;
+    while (!finished.isEmpty()) {
+        int x = finished.pop();
+        if (x == id) { found = true; break; }
+        temp.push(x);
+    }
+    while (!temp.isEmpty()) finished.push(temp.pop());   // restore original order
+    return found;
+}
+
+bool Workshop::replaceInStack(int oldId, int newId) {
+    Stack<int> temp;
+    bool found = false;
+    while (!finished.isEmpty()) {
+        int x = finished.pop();
+        if (x == oldId) { finished.push(newId); found = true; break; }
+        temp.push(x);
+    }
+    while (!temp.isEmpty()) finished.push(temp.pop());
+    return found;
+}
+
+================================================================================
+// FILE: main.cpp   (187 lines)
+================================================================================
+// main.cpp
+// CS212 Project 94 - Tailoring Order Workshop
+// Console menu. Reads and validates input, then calls the Workshop coordinator.
+#include "InputUtils.h"
+#include "Workshop.h"
+
+#include <iostream>
+#include <stdexcept>
+#include <string>
+
+using std::cout;
+
+static void printMenu() {
+    cout << "\n================ TAILORING ORDER WORKSHOP ================\n"
+         << " Customers (linked list)        Orders (BST by order ID)\n"
+         << "  1. Add customer                 7. Create order\n"
+         << "  2. List customers               8. Find order by ID\n"
+         << "  3. Find customer by ID          9. List orders (inorder)\n"
+         << "  4. Update customer             10. Show tree (preorder)\n"
+         << "  5. Delete customer             11. Update order details\n"
+         << "  6. Sort customers (merge sort) 12. Correct an order ID\n"
+         << "                                 13. Delete / cancel order\n"
+         << " Workflow (queue -> stack)\n"
+         << " 14. View sewing queue           17. Rework latest finished\n"
+         << " 15. Sew next garment            18. Customer pickup\n"
+         << " 16. View finished stack         19. Workshop summary\n"
+         << " 20. Load sample data             0. Exit\n"
+         << "==========================================================\n";
+}
+
+static Measurements readMeasurements() {
+    Measurements m;
+    m.chest  = readDouble("  Chest (cm, 30-200): ", 30, 200);
+    m.waist  = readDouble("  Waist (cm, 30-200): ", 30, 200);
+    m.hips   = readDouble("  Hips (cm, 30-200): ", 30, 200);
+    m.inseam = readDouble("  Inseam (cm, 30-130): ", 30, 130);
+    m.sleeve = readDouble("  Sleeve (cm, 30-100): ", 30, 100);
+    return m;
+}
+
+static int readId(const std::string& what) {
+    return readInt("  " + what + " (" + std::to_string(Workshop::MIN_ID) + "-" +
+                       std::to_string(Workshop::MAX_ID) + "): ",
+                   Workshop::MIN_ID, Workshop::MAX_ID);
+}
+
+static void addCustomer(Workshop& w) {
+    Customer c;
+    c.id = readId("Customer ID");
+    if (w.findCustomer(c.id) != nullptr) {   // fail fast before asking for everything
+        cout << "  Error: customer ID " << c.id << " already exists. Duplicate IDs are not allowed.\n";
+        return;
+    }
+    c.name = readNonEmptyLine("  Name: ", 40);
+    c.phone = readNonEmptyLine("  Phone: ", 20);
+    c.m = readMeasurements();
+    w.addCustomer(c);
+}
+
+static void updateCustomer(Workshop& w) {
+    int id = readId("Customer ID to update");
+    Customer* c = w.findCustomer(id);
+    if (c == nullptr) {
+        cout << "  Error: no customer with ID " << id << ".\n";
+        return;
+    }
+    cout << "  Press Enter to keep the current value.\n";
+    std::string s;
+    if (readOptionalLine("  Name [" + c->name + "]: ", s, 40)) c->name = s;
+    if (readOptionalLine("  Phone [" + c->phone + "]: ", s, 20)) c->phone = s;
+    if (readYesNo("  Re-take measurements? (y/n): ")) c->m = readMeasurements();
+    cout << "  Customer #" << id << " updated.\n";
+    w.showCustomer(id);
+}
+
+static void createOrder(Workshop& w) {
+    Order o;
+    o.id = readId("Order ID");
+    if (w.findOrder(o.id) != nullptr) {
+        cout << "  Error: order ID " << o.id << " already exists. Duplicate IDs are rejected.\n";
+        return;
+    }
+    o.customerId = readId("Customer ID");
+    if (w.findCustomer(o.customerId) == nullptr) {
+        cout << "  Error: customer ID " << o.customerId << " does not exist. Add the customer first.\n";
+        return;
+    }
+    o.garment = readNonEmptyLine("  Garment: ", 40);
+    o.alteration = readNonEmptyLine("  Alteration needed: ", 60);
+    o.price = readDouble("  Price (EGP, 0-100000): ", 0, 100000);
+    w.createOrder(o);
+}
+
+static void updateOrder(Workshop& w) {
+    int id = readId("Order ID to update");
+    Order* o = w.findOrder(id);
+    if (o == nullptr) {
+        cout << "  Error: no order with ID " << id << ".\n";
+        return;
+    }
+    cout << "  Press Enter to keep the current value.\n";
+    std::string garment, alteration, priceText, custText;
+    bool g = readOptionalLine("  Garment [" + o->garment + "]: ", garment, 40);
+    bool a = readOptionalLine("  Alteration [" + o->alteration + "]: ", alteration, 60);
+    double price = o->price;
+    bool p = readYesNo("  Change price? (y/n): ");
+    if (p) price = readDouble("  New price (EGP, 0-100000): ", 0, 100000);
+    int cust = o->customerId;
+    bool c = readYesNo("  Re-assign to another customer? (y/n): ");
+    if (c) cust = readId("New customer ID");
+    w.updateOrder(id, g ? &garment : nullptr, a ? &alteration : nullptr,
+                  p ? &price : nullptr, c ? &cust : nullptr);
+}
+
+static void handleChoice(Workshop& w, int choice) {
+    switch (choice) {
+        case 1: addCustomer(w); break;
+        case 2: w.listCustomers(); break;
+        case 3: w.showCustomer(readId("Customer ID")); break;
+        case 4: updateCustomer(w); break;
+        case 5: w.deleteCustomer(readId("Customer ID to delete")); break;
+        case 6: {
+            int k = readInt("  Sort by 1) name  2) ID: ", 1, 2);
+            w.sortCustomers(k == 1 ? CustomerSortKey::BY_NAME : CustomerSortKey::BY_ID);
+            break;
+        }
+        case 7: createOrder(w); break;
+        case 8: w.showOrder(readId("Order ID")); break;
+        case 9: w.listOrdersInorder(); break;
+        case 10: w.showTreePreorder(); break;
+        case 11: updateOrder(w); break;
+        case 12: {
+            int oldId = readId("Current (wrong) order ID");
+            if (w.findOrder(oldId) == nullptr) {
+                cout << "  Error: no order with ID " << oldId << ".\n";
+                break;
+            }
+            int newId = readId("Correct order ID");
+            w.changeOrderId(oldId, newId);
+            break;
+        }
+        case 13: {
+            int id = readId("Order ID to delete");
+            if (w.findOrder(id) == nullptr) {
+                cout << "  Error: no order with ID " << id << ".\n";
+                break;
+            }
+            if (readYesNo("  Really delete order #" + std::to_string(id) + "? (y/n): "))
+                w.deleteOrder(id);
+            else
+                cout << "  Delete cancelled.\n";
+            break;
+        }
+        case 14: w.showQueue(); break;
+        case 15: w.sewNext(); break;
+        case 16: w.showFinished(); break;
+        case 17: w.reworkLatest(); break;
+        case 18: w.pickUp(readId("Order ID being picked up")); break;
+        case 19: w.showSummary(); break;
+        case 20: w.loadSampleData(); break;
+        default: break;
+    }
+}
+
+int main() {
+    Workshop workshop;
+    cout << "Welcome to the Tailoring Order Workshop (CS212 Project 94).\n"
+         << "Tip: choose 20 to load sample data.\n";
+    try {
+        while (true) {
+            printMenu();
+            int choice = readInt("Choose an option (0-20): ", 0, 20);
+            if (choice == 0) break;
+            try {
+                handleChoice(workshop, choice);
+            } catch (const InputEnded&) {
+                throw;                                       // handled below
+            } catch (const std::exception& e) {              // safety net, should not trigger
+                cout << "  Unexpected error: " << e.what() << "\n";
+            }
+        }
+    } catch (const InputEnded&) {
+        cout << "\n(Input ended.)\n";
+    }
+    cout << "Goodbye.\n";
+    return 0;
+}
+

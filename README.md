@@ -17,6 +17,7 @@ The full design, the algorithm (merge sort), the complexity analysis and the lim
 README.md          <- this file: how to run the program
 README.txt         <- the same instructions as plain text
 Source_Code/       <- all .cpp/.h files, the Visual Studio solution, tailor.exe, run.bat, build.bat
+                      (Full_Code_All_Files.txt = all 13 source files in one file, for reading)
 Report/            <- project report (PDF and DOCX)
 Screenshots/       <- screenshots of the program running
 Tests/             <- test plan, test input scripts and their captured outputs
