@@ -2,7 +2,7 @@
 rem Rebuilds tailor.exe from the source files (run after editing the code).
 rem Uses g++ if it is on PATH, otherwise Visual Studio 2022's compiler.
 cd /d "%~dp0"
-set SRC=main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp
+set SRC=*.cpp
 
 where g++ >nul 2>nul
 if %errorlevel%==0 (

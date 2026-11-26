@@ -77,6 +77,9 @@
     <ClCompile Include="OrderBST.cpp" />
     <ClCompile Include="CustomerList.cpp" />
     <ClCompile Include="InputUtils.cpp" />
+    <ClCompile Include="Stack.cpp" />
+    <ClCompile Include="Queue.cpp" />
+    <ClCompile Include="Order.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Customer.h" />

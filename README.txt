@@ -22,7 +22,7 @@ FOLDER LAYOUT
   README.md      the same information, shown on the GitHub page
   Source_Code/   all .cpp/.h files, the Visual Studio solution,
                  tailor.exe, run.bat, build.bat
-                 Full_Code_All_Files.txt = all 13 source files in one
+                 Full_Code_All_Files.txt = all 16 source files in one
                  file, for reading (build from the separate files)
   Report/        project report (PDF and DOCX)
   Screenshots/   screenshots of the program running
@@ -43,12 +43,12 @@ Option 2 - Visual Studio 2022
 
 Option 3 - Command line, g++ (MinGW / Linux / macOS)
   cd Source_Code
-  g++ -std=c++17 -Wall -Wextra -o tailor main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp
+  g++ -std=c++17 -Wall -Wextra -o tailor *.cpp
   ./tailor
 
 Option 4 - Command line, MSVC (Developer Command Prompt for VS)
   cd Source_Code
-  cl /std:c++17 /EHsc /W4 main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp /Fe:tailor.exe
+  cl /std:c++17 /EHsc /W4 *.cpp /Fe:tailor.exe
   tailor.exe
 
 You can also double-click Source_Code\build.bat. It rebuilds tailor.exe

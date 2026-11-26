@@ -22,7 +22,7 @@
 
 عندك Mac أو Linux؟ (ملف tailor.exe للويندوز بس)
    افتح Terminal جوه فولدر Source_Code واكتب:
-   g++ -std=c++17 -o tailor main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp
+   g++ -std=c++17 -o tailor *.cpp
    ./tailor
 
 --- English ---
@@ -41,7 +41,7 @@ If Windows shows "Windows protected your PC":
 Visual Studio 2022: open Source_Code\TailoringWorkshop.sln, press Ctrl + F5.
 
 Mac / Linux (tailor.exe is Windows-only): in the Source_Code folder run
-   g++ -std=c++17 -o tailor main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp
+   g++ -std=c++17 -o tailor *.cpp
    ./tailor
 
 Full instructions: README.txt
