@@ -1,67 +1,25 @@
 // Queue.h
-// CS212 Project 94 - Tailoring Order Workshop
-// Manually implemented FIFO queue on a fixed-size circular array.
+// CS212 Project 94 - Tailoring Order Workshop (simplified course-style version)
+// Queue of order IDs (FIFO) on a fixed-size circular array, no STL.
 // Used for garments awaiting sewing. The fixed capacity models the limited
 // rack space in the workshop: when the rack is full, new orders are refused.
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <stdexcept>
-
-template <typename T>
-class Queue {
-private:
-    T* items;
-    int capacity;
-    int frontIndex;   // index of the current front element
-    int count;        // number of stored elements
-
-public:
-    explicit Queue(int cap) : items(nullptr), capacity(cap), frontIndex(0), count(0) {
-        if (cap <= 0) throw std::invalid_argument("Queue capacity must be positive");
-        items = new T[cap];
-    }
-    ~Queue() { delete[] items; }
-
-    Queue(const Queue&) = delete;
-    Queue& operator=(const Queue&) = delete;
-
-    // O(1). Returns false (and stores nothing) if the queue is full.
-    bool enqueue(const T& value) {
-        if (isFull()) return false;
-        int rear = (frontIndex + count) % capacity;
-        items[rear] = value;
-        ++count;
-        return true;
-    }
-
-    // O(1). Throws std::underflow_error if the queue is empty.
-    T dequeue() {
-        if (isEmpty()) throw std::underflow_error("dequeue() on empty queue");
-        T value = items[frontIndex];
-        frontIndex = (frontIndex + 1) % capacity;
-        --count;
-        return value;
-    }
-
-    // O(1). Throws std::underflow_error if the queue is empty.
-    T front() const {
-        if (isEmpty()) throw std::underflow_error("front() on empty queue");
-        return items[frontIndex];
-    }
-
-    bool isEmpty() const { return count == 0; }
-    bool isFull() const { return count == capacity; }
-    int size() const { return count; }
-    int getCapacity() const { return capacity; }
-
-    // Read-only walk front-to-rear (for display). O(n)
-    template <typename Visitor>
-    void forEachFrontToRear(Visitor visit) const {
-        for (int i = 0; i < count; ++i) {
-            visit(i + 1, items[(frontIndex + i) % capacity]);
-        }
-    }
+struct Queue {
+    int items[8];  // the sewing rack holds 8 garments
+    int front;     // index of the current front element
+    int count;     // number of stored elements
+    int capacity;  // always 8 (set by queueInit)
 };
+
+void queueInit(Queue& q);
+bool enqueue(Queue& q, int value);          // O(1), false if the queue is full
+bool dequeue(Queue& q, int& value);         // O(1), false if the queue is empty
+bool queueFront(Queue& q, int& value);
+bool queueIsEmpty(Queue& q);
+bool queueIsFull(Queue& q);
+int queueSize(Queue& q);
+int queueAt(Queue& q, int position);  // position 0 = front (for display)
 
 #endif // QUEUE_H
