@@ -1,4 +1,4 @@
-# Windows scripts and Visual Studio files must keep CRLF line endings
-*.bat text eol=crlf
-*.sln text eol=crlf
-*.vcxproj text eol=crlf
+# Windows scripts and Visual Studio files are stored with CRLF and never converted
+*.bat -text
+*.sln -text
+*.vcxproj -text
