@@ -1,16 +1,15 @@
 // main.cpp
-// CS212 Project 94 - Tailoring Order Workshop
+// CS212 Project 94 - Tailoring Order Workshop (simplified course-style version)
 // Console menu. Reads and validates input, then calls the Workshop coordinator.
-#include "InputUtils.h"
-#include "Workshop.h"
 
 #include <iostream>
-#include <stdexcept>
 #include <string>
+#include "Workshop.h"
+#include "InputUtils.h"
 
-using std::cout;
+using namespace std;
 
-static void printMenu() {
+void printMenu() {
     cout << "\n================ TAILORING ORDER WORKSHOP ================\n"
          << " Customers (linked list)        Orders (BST by order ID)\n"
          << "  1. Add customer                 7. Create order\n"
@@ -28,160 +27,211 @@ static void printMenu() {
          << "==========================================================\n";
 }
 
-static Measurements readMeasurements() {
+Measurements readMeasurements() {
     Measurements m;
     m.chest  = readDouble("  Chest (cm, 30-200): ", 30, 200);
     m.waist  = readDouble("  Waist (cm, 30-200): ", 30, 200);
     m.hips   = readDouble("  Hips (cm, 30-200): ", 30, 200);
     m.inseam = readDouble("  Inseam (cm, 30-130): ", 30, 130);
-    m.sleeve = readDouble("  Sleeve (cm, 30-100): ", 30, 100);
+    m.sleeve = readDouble("  Sleeve (cm, 30-100): ", 30, 100);   // if input ended, the caller checks inputHasEnded()
     return m;
 }
 
-static int readId(const std::string& what) {
-    return readInt("  " + what + " (" + std::to_string(Workshop::MIN_ID) + "-" +
-                       std::to_string(Workshop::MAX_ID) + "): ",
-                   Workshop::MIN_ID, Workshop::MAX_ID);
+int readId(string what) {
+    return readInt("  " + what + " (1-99999): ",
+                   1, 99999);
 }
 
-static void addCustomer(Workshop& w) {
+void menuAddCustomer() {
     Customer c;
     c.id = readId("Customer ID");
-    if (w.findCustomer(c.id) != nullptr) {   // fail fast before asking for everything
+    if (inputHasEnded()) return;
+    if (findCustomer(c.id) != NULL) {   // fail fast before asking for everything
         cout << "  Error: customer ID " << c.id << " already exists. Duplicate IDs are not allowed.\n";
         return;
     }
     c.name = readNonEmptyLine("  Name: ", 40);
+    if (inputHasEnded()) return;
     c.phone = readNonEmptyLine("  Phone: ", 20);
+    if (inputHasEnded()) return;
     c.m = readMeasurements();
-    w.addCustomer(c);
+    if (inputHasEnded()) return;
+    addCustomer(c);
 }
 
-static void updateCustomer(Workshop& w) {
+void menuUpdateCustomer() {
     int id = readId("Customer ID to update");
-    Customer* c = w.findCustomer(id);
-    if (c == nullptr) {
+    if (inputHasEnded()) return;
+    Customer* c = findCustomer(id);
+    if (c == NULL) {
         cout << "  Error: no customer with ID " << id << ".\n";
         return;
     }
     cout << "  Press Enter to keep the current value.\n";
-    std::string s;
+    string s;
     if (readOptionalLine("  Name [" + c->name + "]: ", s, 40)) c->name = s;
+    if (inputHasEnded()) return;
     if (readOptionalLine("  Phone [" + c->phone + "]: ", s, 20)) c->phone = s;
-    if (readYesNo("  Re-take measurements? (y/n): ")) c->m = readMeasurements();
+    if (inputHasEnded()) return;
+    bool retake = readYesNo("  Re-take measurements? (y/n): ");
+    if (inputHasEnded()) return;
+    if (retake) {
+        Measurements m = readMeasurements();
+        if (inputHasEnded()) return;
+        c->m = m;
+    }
     cout << "  Customer #" << id << " updated.\n";
-    w.showCustomer(id);
+    showCustomer(id);
 }
 
-static void createOrder(Workshop& w) {
+void menuCreateOrder() {
     Order o;
     o.id = readId("Order ID");
-    if (w.findOrder(o.id) != nullptr) {
+    if (inputHasEnded()) return;
+    if (findOrder(o.id) != NULL) {
         cout << "  Error: order ID " << o.id << " already exists. Duplicate IDs are rejected.\n";
         return;
     }
     o.customerId = readId("Customer ID");
-    if (w.findCustomer(o.customerId) == nullptr) {
+    if (inputHasEnded()) return;
+    if (findCustomer(o.customerId) == NULL) {
         cout << "  Error: customer ID " << o.customerId << " does not exist. Add the customer first.\n";
         return;
     }
     o.garment = readNonEmptyLine("  Garment: ", 40);
+    if (inputHasEnded()) return;
     o.alteration = readNonEmptyLine("  Alteration needed: ", 60);
+    if (inputHasEnded()) return;
     o.price = readDouble("  Price (EGP, 0-100000): ", 0, 100000);
-    w.createOrder(o);
+    if (inputHasEnded()) return;
+    o.status = 0 /*WAITING*/;
+    createOrder(o);
 }
 
-static void updateOrder(Workshop& w) {
+void menuUpdateOrder() {
     int id = readId("Order ID to update");
-    Order* o = w.findOrder(id);
-    if (o == nullptr) {
+    if (inputHasEnded()) return;
+    Order* o = findOrder(id);
+    if (o == NULL) {
         cout << "  Error: no order with ID " << id << ".\n";
         return;
     }
     cout << "  Press Enter to keep the current value.\n";
-    std::string garment, alteration, priceText, custText;
+    string garment, alteration, priceText, custText;
     bool g = readOptionalLine("  Garment [" + o->garment + "]: ", garment, 40);
+    if (inputHasEnded()) return;
     bool a = readOptionalLine("  Alteration [" + o->alteration + "]: ", alteration, 60);
+    if (inputHasEnded()) return;
     double price = o->price;
     bool p = readYesNo("  Change price? (y/n): ");
+    if (inputHasEnded()) return;
     if (p) price = readDouble("  New price (EGP, 0-100000): ", 0, 100000);
+    if (inputHasEnded()) return;
     int cust = o->customerId;
     bool c = readYesNo("  Re-assign to another customer? (y/n): ");
+    if (inputHasEnded()) return;
     if (c) cust = readId("New customer ID");
-    w.updateOrder(id, g ? &garment : nullptr, a ? &alteration : nullptr,
-                  p ? &price : nullptr, c ? &cust : nullptr);
+    if (inputHasEnded()) return;
+    string* gp = NULL;
+    string* ap = NULL;
+    double* pp = NULL;
+    int* cp = NULL;
+    if (g) gp = &garment;
+    if (a) ap = &alteration;
+    if (p) pp = &price;
+    if (c) cp = &cust;
+    updateOrder(id, gp, ap, pp, cp);
 }
 
-static void handleChoice(Workshop& w, int choice) {
+void handleChoice(int choice) {
     switch (choice) {
-        case 1: addCustomer(w); break;
-        case 2: w.listCustomers(); break;
-        case 3: w.showCustomer(readId("Customer ID")); break;
-        case 4: updateCustomer(w); break;
-        case 5: w.deleteCustomer(readId("Customer ID to delete")); break;
-        case 6: {
-            int k = readInt("  Sort by 1) name  2) ID: ", 1, 2);
-            w.sortCustomers(k == 1 ? CustomerSortKey::BY_NAME : CustomerSortKey::BY_ID);
+        case 1: menuAddCustomer(); break;
+        case 2: listCustomers(); break;
+        case 3: {
+            int id = readId("Customer ID");
+            if (inputHasEnded()) break;
+            showCustomer(id);
             break;
         }
-        case 7: createOrder(w); break;
-        case 8: w.showOrder(readId("Order ID")); break;
-        case 9: w.listOrdersInorder(); break;
-        case 10: w.showTreePreorder(); break;
-        case 11: updateOrder(w); break;
+        case 4: menuUpdateCustomer(); break;
+        case 5: {
+            int id = readId("Customer ID to delete");
+            if (inputHasEnded()) break;
+            deleteCustomer(id);
+            break;
+        }
+        case 6: {
+            int k = readInt("  Sort by 1) name  2) ID: ", 1, 2);
+            if (inputHasEnded()) break;
+            if (k == 1) sortCustomers(1 /*by name*/);
+            else sortCustomers(2 /*by ID*/);
+            break;
+        }
+        case 7: menuCreateOrder(); break;
+        case 8: {
+            int id = readId("Order ID");
+            if (inputHasEnded()) break;
+            showOrder(id);
+            break;
+        }
+        case 9: listOrdersInorder(); break;
+        case 10: showTreePreorder(); break;
+        case 11: menuUpdateOrder(); break;
         case 12: {
             int oldId = readId("Current (wrong) order ID");
-            if (w.findOrder(oldId) == nullptr) {
+            if (inputHasEnded()) break;
+            if (findOrder(oldId) == NULL) {
                 cout << "  Error: no order with ID " << oldId << ".\n";
                 break;
             }
             int newId = readId("Correct order ID");
-            w.changeOrderId(oldId, newId);
+            if (inputHasEnded()) break;
+            changeOrderId(oldId, newId);
             break;
         }
         case 13: {
             int id = readId("Order ID to delete");
-            if (w.findOrder(id) == nullptr) {
+            if (inputHasEnded()) break;
+            if (findOrder(id) == NULL) {
                 cout << "  Error: no order with ID " << id << ".\n";
                 break;
             }
-            if (readYesNo("  Really delete order #" + std::to_string(id) + "? (y/n): "))
-                w.deleteOrder(id);
+            bool sure = readYesNo("  Really delete order #" + intToText(id) + "? (y/n): ");
+            if (inputHasEnded()) break;
+            if (sure)
+                deleteOrder(id);
             else
                 cout << "  Delete cancelled.\n";
             break;
         }
-        case 14: w.showQueue(); break;
-        case 15: w.sewNext(); break;
-        case 16: w.showFinished(); break;
-        case 17: w.reworkLatest(); break;
-        case 18: w.pickUp(readId("Order ID being picked up")); break;
-        case 19: w.showSummary(); break;
-        case 20: w.loadSampleData(); break;
+        case 14: showQueue(); break;
+        case 15: sewNext(); break;
+        case 16: showFinished(); break;
+        case 17: reworkLatest(); break;
+        case 18: {
+            int id = readId("Order ID being picked up");
+            if (inputHasEnded()) break;
+            pickUp(id);
+            break;
+        }
+        case 19: showSummary(); break;
+        case 20: loadSampleData(); break;
         default: break;
     }
 }
 
 int main() {
-    Workshop workshop;
+    initWorkshop();
     cout << "Welcome to the Tailoring Order Workshop (CS212 Project 94).\n"
          << "Tip: choose 20 to load sample data.\n";
-    try {
-        while (true) {
-            printMenu();
-            int choice = readInt("Choose an option (0-20): ", 0, 20);
-            if (choice == 0) break;
-            try {
-                handleChoice(workshop, choice);
-            } catch (const InputEnded&) {
-                throw;                                       // handled below
-            } catch (const std::exception& e) {              // safety net, should not trigger
-                cout << "  Unexpected error: " << e.what() << "\n";
-            }
-        }
-    } catch (const InputEnded&) {
-        cout << "\n(Input ended.)\n";
+    while (true) {
+        printMenu();
+        int choice = readInt("Choose an option (0-20): ", 0, 20);
+        if (inputHasEnded() || choice == 0) break;
+        handleChoice(choice);
+        if (inputHasEnded()) break;
     }
     cout << "Goodbye.\n";
+    closeWorkshop();
     return 0;
 }
