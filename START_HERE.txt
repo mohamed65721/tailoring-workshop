@@ -1,0 +1,48 @@
+﻿=====================================================================
+ CS212 Project 94 - Tailoring Order Workshop
+ ابدأ من هنا / START HERE
+=====================================================================
+
+--- بالعربي ---
+
+1) فك الضغط عن ملف الـ ZIP الأول (كليك يمين > Extract All).
+   ما تشغّلش البرنامج من جوه الـ ZIP نفسه.
+
+2) افتح فولدر Source_Code ودبل كليك على run.bat
+   هيفتح البرنامج على طول.
+
+3) أول ما القايمة تظهر اكتب 20 واضغط Enter عشان يحمّل بيانات تجريبية،
+   وبعدين جرّب باقي الاختيارات.
+
+لو ويندوز طلّع رسالة "Windows protected your PC":
+   اضغط More info وبعدين Run anyway (البرنامج بتاعنا ومش موقّع).
+
+عايز تفتحه في Visual Studio 2022؟
+   افتح Source_Code\TailoringWorkshop.sln واضغط Ctrl + F5
+
+عندك Mac أو Linux؟ (ملف tailor.exe للويندوز بس)
+   افتح Terminal جوه فولدر Source_Code واكتب:
+   g++ -std=c++17 -o tailor main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp
+   ./tailor
+
+--- English ---
+
+1) Extract the ZIP first (right-click > Extract All).
+   Do not run the program from inside the ZIP.
+
+2) Open the Source_Code folder and double-click run.bat.
+
+3) When the menu appears, type 20 and press Enter to load sample data,
+   then try the other options.
+
+If Windows shows "Windows protected your PC":
+   click More info, then Run anyway (our program is not code-signed).
+
+Visual Studio 2022: open Source_Code\TailoringWorkshop.sln, press Ctrl + F5.
+
+Mac / Linux (tailor.exe is Windows-only): in the Source_Code folder run
+   g++ -std=c++17 -o tailor main.cpp Workshop.cpp OrderBST.cpp CustomerList.cpp InputUtils.cpp
+   ./tailor
+
+Full instructions: README.txt
+Project repository: https://github.com/mohamed65721/tailoring-workshop
