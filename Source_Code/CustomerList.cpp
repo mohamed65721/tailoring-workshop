@@ -1,117 +1,130 @@
 // CustomerList.cpp
-// CS212 Project 94 - Tailoring Order Workshop
+// CS212 Project 94 - Tailoring Order Workshop (simplified course-style version)
+
+#include <string>
 #include "CustomerList.h"
 
-#include <cctype>
-#include <string>
+using namespace std;
 
-CustomerList::CustomerList() : head(nullptr), tail(nullptr), count(0) {}
-
-CustomerList::~CustomerList() {
-    while (head != nullptr) {
-        Node* old = head;
-        head = head->next;
-        delete old;
-    }
+void listInit(CustomerList& list) {
+    list.head = NULL;
+    list.tail = NULL;
+    list.count = 0;
 }
 
-bool CustomerList::insert(const Customer& c) {
-    if (search(c.id) != nullptr) return false;   // duplicate ID policy: reject
-    Node* node = new Node(c);
-    if (head == nullptr) {
-        head = tail = node;
-    } else {
-        tail->next = node;
-        tail = node;
+void listClear(CustomerList& list) {
+    while (list.head != NULL) {
+        CustomerNode* old = list.head;
+        list.head = list.head->next;
+        delete old;
     }
-    ++count;
+    list.tail = NULL;
+    list.count = 0;
+}
+
+Customer* listSearch(CustomerList& list, int id) {
+    for (CustomerNode* cur = list.head; cur != NULL; cur = cur->next)
+        if (cur->data.id == id) return &cur->data;
+    return NULL;
+}
+
+bool listInsert(CustomerList& list, Customer& c) {
+    if (listSearch(list, c.id) != NULL) return false;   // duplicate ID: reject
+    CustomerNode* node = new CustomerNode;
+    node->data = c;
+    node->next = NULL;
+    if (list.head == NULL) {
+        list.head = node;
+        list.tail = node;
+    } else {
+        list.tail->next = node;
+        list.tail = node;
+    }
+    list.count++;
     return true;
 }
 
-bool CustomerList::remove(int id) {
-    Node* prev = nullptr;
-    Node* cur = head;
-    while (cur != nullptr && cur->data.id != id) {
+bool listRemove(CustomerList& list, int id) {
+    CustomerNode* prev = NULL;
+    CustomerNode* cur = list.head;
+    while (cur != NULL && cur->data.id != id) {
         prev = cur;
         cur = cur->next;
     }
-    if (cur == nullptr) return false;            // not found (also covers empty list)
+    if (cur == NULL) return false;            // not found (also covers an empty list)
 
-    if (prev == nullptr) head = cur->next;       // deleting the first node
+    if (prev == NULL) list.head = cur->next;  // deleting the first node
     else prev->next = cur->next;
 
-    if (cur == tail) tail = prev;                // deleting the last node
+    if (cur == list.tail) list.tail = prev;      // deleting the last node
     delete cur;
-    --count;
-    return true;                                 // only-node case: head = tail = nullptr
-}
-
-Customer* CustomerList::search(int id) {
-    for (Node* cur = head; cur != nullptr; cur = cur->next)
-        if (cur->data.id == id) return &cur->data;
-    return nullptr;
-}
-
-const Customer* CustomerList::search(int id) const {
-    for (Node* cur = head; cur != nullptr; cur = cur->next)
-        if (cur->data.id == id) return &cur->data;
-    return nullptr;
+    list.count--;
+    return true;                                 // only-node case: head = tail = NULL
 }
 
 // ----------------------------- merge sort ---------------------------------
 
-static std::string lowerCopy(const std::string& s) {
-    std::string r = s;
-    for (char& ch : r) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+// Lower-case copy of a string (so "ahmed" and "Ahmed" sort together).
+string lowerName(string s) {
+    string r = s;
+    for (int i = 0; i < (int)r.size(); i++)
+        if (r[i] >= 'A' && r[i] <= 'Z') r[i] = r[i] + ('a' - 'A');
     return r;
 }
 
-bool CustomerList::lessThan(const Customer& a, const Customer& b, CustomerSortKey key) {
-    if (key == CustomerSortKey::BY_ID) return a.id < b.id;
-    std::string na = lowerCopy(a.name), nb = lowerCopy(b.name);
+// true if a must come before b
+bool lessThan(Customer& a, Customer& b, int sortKey) {
+    if (sortKey == 2 /*by ID*/) return a.id < b.id;
+    string na = lowerName(a.name), nb = lowerName(b.name);
     if (na != nb) return na < nb;
-    return a.id < b.id;  // tie-break so the order is fully deterministic
+    return a.id < b.id;   // tie-break so the order is fully deterministic
 }
 
-// Splits the chain in half using slow/fast pointers; returns the second half.
-CustomerList::Node* CustomerList::split(Node* start) {
-    Node* slow = start;
-    Node* fast = start->next;
-    while (fast != nullptr && fast->next != nullptr) {
-        slow = slow->next;
-        fast = fast->next->next;
-    }
-    Node* second = slow->next;
-    slow->next = nullptr;
+// Splits the chain in half (walks to the middle); returns the second half.
+CustomerNode* splitList(CustomerNode* start) {
+    int len = 0;
+    for (CustomerNode* p = start; p != NULL; p = p->next) len++;
+    CustomerNode* mid = start;
+    for (int i = 1; i < len / 2; i++) mid = mid->next;   // last node of the first half
+    CustomerNode* second = mid->next;
+    mid->next = NULL;
     return second;
 }
 
-// Merges two sorted chains. Takes from 'a' on ties, which keeps the sort stable.
-CustomerList::Node* CustomerList::merge(Node* a, Node* b, CustomerSortKey key) {
-    Node dummy{Customer{}};
-    Node* tailPtr = &dummy;
-    while (a != nullptr && b != nullptr) {
-        if (lessThan(b->data, a->data, key)) {
-            tailPtr->next = b;
+// Merges two sorted chains with a loop. Takes from 'a' on ties (keeps it stable).
+CustomerNode* mergeLists(CustomerNode* a, CustomerNode* b, int sortKey) {
+    CustomerNode* result = NULL;   // first node of the merged chain
+    CustomerNode* last = NULL;     // last node added so far
+    while (a != NULL && b != NULL) {
+        CustomerNode* pick;
+        if (lessThan(b->data, a->data, sortKey)) {
+            pick = b;
             b = b->next;
         } else {
-            tailPtr->next = a;
+            pick = a;
             a = a->next;
         }
-        tailPtr = tailPtr->next;
+        if (result == NULL) result = pick;
+        else last->next = pick;
+        last = pick;
     }
-    tailPtr->next = (a != nullptr) ? a : b;
-    return dummy.next;
+    CustomerNode* rest = b;
+    if (a != NULL) rest = a;
+    if (result == NULL) return rest;
+    last->next = rest;
+    return result;
 }
 
-CustomerList::Node* CustomerList::mergeSort(Node* start, CustomerSortKey key) {
-    if (start == nullptr || start->next == nullptr) return start;  // 0 or 1 node
-    Node* second = split(start);
-    return merge(mergeSort(start, key), mergeSort(second, key), key);
+CustomerNode* mergeSort(CustomerNode* start, int sortKey) {
+    if (start == NULL || start->next == NULL) return start;   // 0 or 1 node
+    CustomerNode* second = splitList(start);
+    start = mergeSort(start, sortKey);
+    second = mergeSort(second, sortKey);
+    return mergeLists(start, second, sortKey);
 }
 
-void CustomerList::sort(CustomerSortKey key) {
-    head = mergeSort(head, key);
-    tail = head;                                  // re-establish the tail pointer
-    while (tail != nullptr && tail->next != nullptr) tail = tail->next;
+void listSort(CustomerList& list, int sortKey) {
+    list.head = mergeSort(list.head, sortKey);
+    list.tail = list.head;                       // re-establish the tail pointer
+    while (list.tail != NULL && list.tail->next != NULL) list.tail = list.tail->next;
 }
