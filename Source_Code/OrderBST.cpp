@@ -1,94 +1,112 @@
 // OrderBST.cpp
-// CS212 Project 94 - Tailoring Order Workshop
+// CS212 Project 94 - Tailoring Order Workshop (simplified course-style version)
+
 #include "OrderBST.h"
 
-OrderBST::OrderBST() : root(nullptr), count(0) {}
+void bstInit(OrderBST& t) {
+    t.root = NULL;
+    t.count = 0;
+}
 
-OrderBST::~OrderBST() { destroy(root); }
-
-void OrderBST::destroy(Node* n) {
-    if (n == nullptr) return;
-    destroy(n->left);
-    destroy(n->right);
+void destroyNode(BSTNode* n) {
+    if (n == NULL) return;
+    destroyNode(n->left);       // post-order: children first
+    destroyNode(n->right);
     delete n;
 }
 
-bool OrderBST::insert(const Order& o) {
-    Node* parent = nullptr;
-    Node* cur = root;
-    while (cur != nullptr) {
-        if (o.id == cur->data.id) return false;   // duplicate ID -> reject
-        parent = cur;
-        cur = (o.id < cur->data.id) ? cur->left : cur->right;
-    }
-    Node* node = new Node(o);
-    if (parent == nullptr) root = node;
-    else if (o.id < parent->data.id) parent->left = node;
-    else parent->right = node;
-    ++count;
-    return true;
+void bstClear(OrderBST& t) {
+    destroyNode(t.root);
+    t.root = NULL;
+    t.count = 0;
 }
 
-OrderBST::Node* OrderBST::minNode(Node* n) {
-    while (n != nullptr && n->left != nullptr) n = n->left;
-    return n;
+// Recursive insert: returns the (possibly new) root of this subtree.
+BSTNode* insertNode(BSTNode* root, Order& o, bool& inserted) {
+    if (root == NULL) {
+        BSTNode* node = new BSTNode;
+        node->data = o;
+        node->left = NULL;
+        node->right = NULL;
+        inserted = true;
+        return node;
+    }
+    if (o.id == root->data.id) {          // duplicate ID -> reject
+        inserted = false;
+        return root;
+    }
+    if (o.id < root->data.id) root->left = insertNode(root->left, o, inserted);
+    else root->right = insertNode(root->right, o, inserted);
+    return root;
+}
+
+bool bstInsert(OrderBST& t, Order& o) {
+    bool inserted = false;
+    t.root = insertNode(t.root, o, inserted);
+    if (inserted) t.count++;
+    return inserted;
+}
+
+// Smallest node of a subtree (leftmost). Used as the inorder successor.
+BSTNode* getSuccessor(BSTNode* curr) {
+    curr = curr->right;
+    while (curr != NULL && curr->left != NULL) curr = curr->left;
+    return curr;
 }
 
 // Recursive delete. Handles: leaf, one child, two children (inorder successor),
-// and the root-only tree (returns nullptr so root becomes empty).
-OrderBST::Node* OrderBST::removeNode(Node* n, int id, bool& removed) {
-    if (n == nullptr) return nullptr;
-    if (id < n->data.id) {
-        n->left = removeNode(n->left, id, removed);
-    } else if (id > n->data.id) {
-        n->right = removeNode(n->right, id, removed);
+// and the root-only tree (returns NULL so the root becomes empty).
+BSTNode* deleteNode(BSTNode* root, int id, bool& removed) {
+    if (root == NULL) return root;
+    if (id < root->data.id) {
+        root->left = deleteNode(root->left, id, removed);
+    } else if (id > root->data.id) {
+        root->right = deleteNode(root->right, id, removed);
     } else {
         removed = true;
-        if (n->left == nullptr) {
-            Node* r = n->right;
-            delete n;
-            return r;
+        if (root->left == NULL) {          // 0 or 1 child (right)
+            BSTNode* temp = root->right;
+            delete root;
+            return temp;
         }
-        if (n->right == nullptr) {
-            Node* l = n->left;
-            delete n;
-            return l;
+        if (root->right == NULL) {         // 1 child (left)
+            BSTNode* temp = root->left;
+            delete root;
+            return temp;
         }
-        Node* succ = minNode(n->right);          // two children
-        n->data = succ->data;
+        BSTNode* succ = getSuccessor(root);   // 2 children
+        root->data = succ->data;
         bool dummy = false;
-        n->right = removeNode(n->right, succ->data.id, dummy);
+        root->right = deleteNode(root->right, succ->data.id, dummy);
     }
-    return n;
+    return root;
 }
 
-bool OrderBST::remove(int id) {
+bool bstRemove(OrderBST& t, int id) {
     bool removed = false;
-    root = removeNode(root, id, removed);
-    if (removed) --count;
+    t.root = deleteNode(t.root, id, removed);
+    if (removed) t.count--;
     return removed;
 }
 
-Order* OrderBST::search(int id) {
-    Node* cur = root;
-    while (cur != nullptr) {
-        if (id == cur->data.id) return &cur->data;
-        cur = (id < cur->data.id) ? cur->left : cur->right;
-    }
-    return nullptr;
+Order* searchNode(BSTNode* root, int id) {
+    if (root == NULL) return NULL;
+    if (id == root->data.id) return &root->data;
+    if (id > root->data.id) return searchNode(root->right, id);
+    return searchNode(root->left, id);
 }
 
-const Order* OrderBST::search(int id) const {
-    const Node* cur = root;
-    while (cur != nullptr) {
-        if (id == cur->data.id) return &cur->data;
-        cur = (id < cur->data.id) ? cur->left : cur->right;
-    }
-    return nullptr;
+Order* bstSearch(OrderBST& t, int id) {
+    return searchNode(t.root, id);
 }
 
-int OrderBST::heightOf(const Node* n) {
-    if (n == nullptr) return 0;
-    int lh = heightOf(n->left), rh = heightOf(n->right);
-    return 1 + (lh > rh ? lh : rh);
+int heightNode(BSTNode* n) {
+    if (n == NULL) return 0;
+    int lh = heightNode(n->left), rh = heightNode(n->right);
+    if (lh > rh) return 1 + lh;
+    return 1 + rh;
+}
+
+int bstHeight(OrderBST& t) {
+    return heightNode(t.root);
 }
