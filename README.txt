@@ -16,8 +16,18 @@ All four data structures are implemented by hand (no STL containers):
 Sorting algorithm: merge sort on the customer linked list (menu option 6).
 
 
+BROWSER INTERFACE
+-----------------
+Open Open_Workshop_Interface.bat or index.html from the repository root.
+The interface is a standalone browser demo; its in-memory data is not shared
+with the C++ console application. Styling and fonts load from CDNs.
+
+
 FOLDER LAYOUT
 -------------
+  index.html                  opens the browser interface
+  Open_Workshop_Interface.bat Windows shortcut for the browser interface
+  atelier-interface/          The Atelier browser interface
   README.txt     this file
   README.md      the same information, shown on the GitHub page
   Source_Code/   all .cpp/.h files, the Visual Studio solution,

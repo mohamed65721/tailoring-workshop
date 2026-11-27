@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Atelier — Tailoring Order Workshop</title>
+  <!-- Google Fonts: Fraunces (editorial display), Plus Jakarta Sans (clean UI), JetBrains Mono (IDs & metrics) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+          },
+          colors: {
+            linen: '#FBF7F0',
+            cream: '#F4ECE0',
+            sand: '#EAE0D0',
+            espresso: '#2B2118',
+            umber: '#5E4F40',
+            muted: '#8A7968',
+            terracotta: '#C45D3B',
+            terracottaDark: '#A14628',
+            brass: '#B88938',
+            brassLight: '#F3E5C8',
+            sage: '#3E6B58',
+            sageLight: '#E3EFE9',
+            plum: '#754F6B',
+          },
+          boxShadow: {
+            tactile: '0 10px 28px -8px rgba(43, 33, 24, 0.12), 0 2px 6px -1px rgba(43, 33, 24, 0.06)',
+            floating: '0 22px 50px -12px rgba(43, 33, 24, 0.24)',
+            rail: '0 8px 16px -4px rgba(43, 33, 24, 0.28), inset 0 2px 3px rgba(255, 255, 255, 0.45)',
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      --bg-linen: #FBF7F0;
+      --bg-cream: #F4ECE0;
+      --ink-espresso: #2B2118;
+      --accent-terracotta: #C45D3B;
+      --accent-brass: #B88938;
+      --accent-sage: #3E6B58;
+    }
+
+    body {
+      background-color: var(--bg-linen);
+      background-image:
+        radial-gradient(circle at 12% 0%, rgba(196, 93, 59, 0.08) 0%, transparent 42%),
+        radial-gradient(circle at 88% 8%, rgba(184, 137, 56, 0.11) 0%, transparent 45%),
+        radial-gradient(circle at 50% 100%, rgba(62, 107, 88, 0.06) 0%, transparent 50%);
+      color: var(--ink-espresso);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Subtle measuring-tape hairline accent */
+    .tape-ruler {
+      background-image: repeating-linear-gradient(
+        90deg,
+        rgba(138, 121, 104, 0.28) 0px,
+        rgba(138, 121, 104, 0.28) 1px,
+        transparent 1px,
+        transparent 10px
+      );
+    }
+
+    /* Gentle garment sway & tag swing */
+    @keyframes garmentSway {
+      0%, 100% { transform: rotate(-1.6deg); }
+      50% { transform: rotate(1.8deg); }
+    }
+    @keyframes tagSwing {
+      0%, 100% { transform: rotate(-5deg); }
+      50% { transform: rotate(6deg); }
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: translateY(14px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes needleBob {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(6px); }
+    }
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(196, 93, 59, 0.45); }
+      70% { box-shadow: 0 0 0 10px rgba(196, 93, 59, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(196, 93, 59, 0); }
+    }
+
+    .garment-sway {
+      transform-origin: 80px 10px;
+      animation: garmentSway 4.6s ease-in-out infinite;
+      animation-delay: var(--sway-delay, 0s);
+    }
+    .hanger-card:hover .garment-sway {
+      animation-play-state: paused;
+      transform: rotate(0deg) scale(1.04) translateY(-4px);
+      transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .tag-swing {
+      transform-origin: 126px 70px;
+      animation: tagSwing 3.4s ease-in-out infinite;
+      animation-delay: var(--tag-delay, 0s);
+    }
+    .animate-pop {
+      animation: popIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    .needle-active {
+      animation: needleBob 0.18s linear infinite;
+    }
+    .next-badge-pulse {
+      animation: pulseRing 2.2s infinite;
+    }
+
+    /* Custom warm scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #F4ECE0; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb { background: #CBB99F; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #A99375; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-terracotta/20 selection:text-espresso">
+
+  <!-- Top Editorial Atelier Header -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-linen/85 border-b border-sand/90">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-espresso text-linen flex items-center justify-center shadow-tactile shrink-0">
+          <!-- Custom inline SVG Atelier Spool & Needle Mark -->
+          <svg class="w-6 h-6" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="7" y="5" width="14" height="3" rx="1.5" fill="#E3B563" stroke="none" />
+            <rect x="7" y="20" width="14" height="3" rx="1.5" fill="#E3B563" stroke="none" />
+            <path d="M9 8h10M8.5 11.5h11M9 15h10M9.5 18h9" stroke="#FBF7F0" stroke-linecap="round" />
+            <path d="M22 4l-3 20" stroke="#D97757" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-serif text-2xl sm:text-[26px] font-semibold tracking-tight text-espresso leading-none">
+              The Atelier
+            </h1>
+            <span class="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-brassLight text-espresso border border-brass/30">
+              CS212 · WORKSHOP
+            </span>
+          </div>
+          <p class="text-xs text-muted tracking-wide mt-1">
+            Bespoke Alterations · Queue FIFO · Finished Stack LIFO · Order BST
+          </p>
+        </div>
+      </div>
+
+      <!-- Primary Workflow & Utility Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          id="btn-sew-next"
+          type="button"
+          onclick="handleSewNext()"
+          class="px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-espresso text-linen hover:bg-umber active:scale-[0.98] transition shadow-sm flex items-center gap-1.5 cursor-pointer"
+          title="Dequeue front garment (FIFO) -> mark COMPLETED -> push to finished stack (LIFO)"
+        >
+          <span>Sew Next</span>
+          <span class="font-mono text-[11px] px-1.5 py-0.5 rounded-full bg-white/15" id="badge-queue-count">0</span>
+        </button>
+
+        <button
+          id="btn-rework"
+          type="button"
+          onclick="handleReworkLatest()"
+          class="px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-cream text-espresso border border-sand hover:border-terracotta hover:text-terracotta active:scale-[0.98] transition flex items-center gap-1.5 cursor-pointer"
+          title="Pop top garment from finished stack (LIFO) -> send back to sewing queue"
+        >
+          <span>Rework Latest</span>
+        </button>
+
+        <button
+          id="btn-pickup"
+          type="button"
+          onclick="openPickupModal()"
+          class="px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-sageLight text-sage border border-sage/30 hover:bg-sage hover:text-white active:scale-[0.98] transition cursor-pointer"
+        >
+          Pickup
+        </button>
+
+        <button
+          id="btn-new-order"
+          type="button"
+          onclick="openNewOrderModal()"
+          class="px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-terracotta text-white hover:bg-terracottaDark active:scale-[0.98] transition shadow-tactile cursor-pointer"
+        >
+          + New Order
+        </button>
+
+        <button
+          id="btn-sample"
+          type="button"
+          onclick="loadSampleWorkshopData()"
+          class="px-3 py-2 rounded-full text-xs sm:text-sm font-semibold bg-white text-umber border border-sand hover:border-brass hover:text-espresso active:scale-[0.98] transition cursor-pointer"
+          title="Load sample customers & orders (idempotent)"
+        >
+          Sample Data
+        </button>
+      </div>
+    </div>
+    <div class="h-1.5 w-full tape-ruler"></div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-7">
+
+    <!-- Live Telemetry & Consistency Strip -->
+    <section aria-label="Workshop Telemetry" class="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div class="bg-white/90 border border-sand rounded-2xl p-4 shadow-tactile">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-muted">Sewing Queue (FIFO)</div>
+        <div class="mt-1.5 flex items-baseline justify-between">
+          <span class="font-serif text-2xl font-semibold text-espresso" id="stat-queue">0 / 8</span>
+          <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-cream text-umber" id="stat-queue-tag">Ready</span>
+        </div>
+      </div>
+
+      <div class="bg-white/90 border border-sand rounded-2xl p-4 shadow-tactile">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-muted">Finished Stack (LIFO)</div>
+        <div class="mt-1.5 flex items-baseline justify-between">
+          <span class="font-serif text-2xl font-semibold text-sage" id="stat-stack">0</span>
+          <span class="text-[11px] font-mono text-muted" id="stat-stack-top">Top: —</span>
+        </div>
+      </div>
+
+      <div class="bg-white/90 border border-sand rounded-2xl p-4 shadow-tactile">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-muted">Order BST · Height</div>
+        <div class="mt-1.5 flex items-baseline justify-between">
+          <span class="font-serif text-2xl font-semibold text-espresso" id="stat-orders">0</span>
+          <span class="text-[11px] font-mono text-muted" id="stat-height">h = 0</span>
+        </div>
+      </div>
+
+      <div class="bg-white/90 border border-sand rounded-2xl p-4 shadow-tactile">
+        <div class="text-[11px] font-mono uppercase tracking-wider text-muted">Collected Revenue</div>
+        <div class="mt-1.5 flex items-baseline justify-between">
+          <span class="font-serif text-2xl font-semibold text-terracotta" id="stat-revenue">0.00</span>
+          <span class="text-[11px] font-mono text-muted">EGP</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onclick="runConsistencyAudit(true)"
+        class="col-span-2 lg:col-span-1 text-left bg-white/90 border border-sand hover:border-sage rounded-2xl p-4 shadow-tactile transition cursor-pointer group"
+        title="Click to inspect workshop invariants I1–I5"
+      >
+        <div class="text-[11px] font-mono uppercase tracking-wider text-muted flex items-center justify-between">
+          <span>Invariants I1–I5</span>
+          <span class="text-sage group-hover:translate-x-0.5 transition-transform">Inspect →</span>
+        </div>
+        <div class="mt-1.5 flex items-center gap-2">
+          <span id="stat-inv-dot" class="w-2.5 h-2.5 rounded-full bg-sage"></span>
+          <span id="stat-inv-label" class="font-semibold text-sm text-sage">VERIFIED OK</span>
+        </div>
+      </button>
+    </section>
+
+    <!-- Interactive Sewing Rack (Capacity = 8 FIFO) -->
+    <section aria-label="Sewing Queue Rack" class="bg-white/85 border border-sand rounded-3xl p-5 sm:p-7 shadow-tactile">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h2 class="font-serif text-xl sm:text-2xl font-semibold text-espresso">Waiting on the Sewing Rack</h2>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-terracotta/10 text-terracotta font-medium">
+              FIFO · Max 8
+            </span>
+          </div>
+          <p class="text-xs sm:text-sm text-muted mt-0.5">
+            Click any hanging garment to inspect measurements, alteration notes &amp; live status progression.
+          </p>
+        </div>
+        <div class="text-xs font-mono text-umber bg-cream px-3 py-1.5 rounded-full border border-sand" id="rack-caption">
+          0 of 8 hooks occupied
+        </div>
+      </div>
+
+      <!-- Brass / Walnut Rack Rail -->
+      <div class="relative pt-7 pb-2">
+        <!-- Left & Right Brass Finials -->
+        <div class="hidden sm:flex justify-between items-center absolute top-6 -left-2 -right-2 z-10 pointer-events-none">
+          <span class="w-4 h-4 rounded-full bg-brass shadow-md border border-espresso/20"></span>
+          <span class="w-4 h-4 rounded-full bg-brass shadow-md border border-espresso/20"></span>
+        </div>
+        <!-- Wooden & Brass Rail -->
+        <div class="h-3 w-full rounded-full shadow-rail relative z-10" style="background: linear-gradient(180deg, #C89B68 0%, #9E6E3E 65%, #7E542B 100%);"></div>
+
+        <!-- 8 Hook Slots Grid -->
+        <div id="rack-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-2 pt-1 relative z-20">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Finished Alterations Shelf (LIFO Stack) + Active Sewing Machine Indicator -->
+    <section aria-label="Finished Alterations Shelf" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+      <!-- Finished Stack Shelf -->
+      <div class="lg:col-span-8 bg-white/85 border border-sand rounded-3xl p-5 sm:p-6 shadow-tactile flex flex-col justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="font-serif text-xl font-semibold text-espresso">Finished Shelf · Ready for Pickup</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono bg-sageLight text-sage font-medium">
+                LIFO Stack
+              </span>
+            </div>
+            <p class="text-xs text-muted mt-0.5">
+              Newest completed order sits on top — targeted first by <strong class="text-espresso">Rework Latest</strong>.
+            </p>
+          </div>
+          <span class="text-xs font-mono text-muted" id="shelf-count-label">0 garments</span>
+        </div>
+
+        <div id="finished-shelf" class="min-h-[124px] rounded-2xl bg-cream/70 border border-dashed border-umber/25 p-4 flex flex-wrap items-center gap-3">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+
+      <!-- Atelier Bench / Sewing Station Card -->
+      <div class="lg:col-span-4 bg-espresso text-linen rounded-3xl p-5 sm:p-6 shadow-floating flex flex-col justify-between relative overflow-hidden">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <span class="text-[11px] font-mono uppercase tracking-widest text-brassLight/80">Stitching Station</span>
+            <h3 class="font-serif text-xl font-semibold mt-1">Bernina &amp; Lockstitch</h3>
+            <p class="text-xs text-linen/70 mt-1" id="bench-status-text">
+              Idle — ready to dequeue front order.
+            </p>
+          </div>
+          <!-- Animated Sewing Machine SVG -->
+          <svg id="sewing-machine-svg" class="w-24 h-16 shrink-0" viewBox="0 0 150 100" fill="none">
+            <rect x="8" y="84" width="134" height="9" rx="4.5" fill="#B88938" />
+            <path d="M18 84V36c0-10 7-17 17-17h76c12 0 19 8 19 18v9h-22v37H18z" fill="#F4ECE0" stroke="#CBB99F" stroke-width="2" />
+            <rect x="102" y="46" width="10" height="38" fill="#DFD3C0" />
+            <circle cx="36" cy="39" r="9" fill="#CBB99F" stroke="#8A7968" stroke-width="1.5" />
+            <g id="machine-needle-group">
+              <rect x="91" y="42" width="3" height="28" rx="1" fill="#C45D3B" />
+              <line x1="92.5" y1="70" x2="92.5" y2="78" stroke="#2B2118" stroke-width="1.5" />
+            </g>
+            <rect x="68" y="76" width="52" height="8" rx="3" fill="#CBB99F" />
+          </svg>
+        </div>
+
+        <div class="mt-5 pt-4 border-t border-white/10 flex items-center justify-between text-xs">
+          <span class="font-mono text-linen/70" id="bench-next-order">Next up: None</span>
+          <button
+            type="button"
+            onclick="openWorkspaceDrawer('orders')"
+            class="font-semibold text-brassLight hover:underline cursor-pointer"
+          >
+            Ledger &amp; BST →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Multi-Tab Workshop Ledger: Orders (BST), Customers (Linked List + Merge Sort), Tree & Invariants -->
+    <section aria-label="Workshop Records and Data Structures" class="bg-white/90 border border-sand rounded-3xl p-5 sm:p-7 shadow-tactile">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-sand pb-4">
+        <div class="flex flex-wrap items-center gap-1.5" role="tablist">
+          <button
+            id="tab-orders"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            onclick="switchLedgerTab('orders')"
+            class="ledger-tab px-4 py-2 rounded-full text-sm font-semibold bg-espresso text-linen transition cursor-pointer"
+          >
+            Orders (BST)
+          </button>
+          <button
+            id="tab-customers"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            onclick="switchLedgerTab('customers')"
+            class="ledger-tab px-4 py-2 rounded-full text-sm font-semibold bg-cream text-umber hover:text-espresso transition cursor-pointer"
+          >
+            Customers &amp; Measurements
+          </button>
+          <button
+            id="tab-tree"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            onclick="switchLedgerTab('tree')"
+            class="ledger-tab px-4 py-2 rounded-full text-sm font-semibold bg-cream text-umber hover:text-espresso transition cursor-pointer"
+          >
+            BST Preorder &amp; Audit
+          </button>
+        </div>
+
+        <!-- Contextual Tab Actions -->
+        <div id="tab-actions" class="flex flex-wrap items-center gap-2">
+          <!-- Populated by switchLedgerTab -->
+        </div>
+      </div>
+
+      <div id="ledger-content" class="mt-5">
+        <!-- Populated dynamically via JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 text-xs text-muted flex flex-wrap items-center justify-between gap-2">
+    <span>The Atelier · Interactive Tailoring Workshop Simulation (Chest, Waist, Hips, Inseam, Sleeve in cm · Prices in EGP)</span>
+    <span class="font-mono">Single-file interactive studio</span>
+  </footer>
+
+  <!-- Toast Notification Banner -->
+  <div
+    id="toast"
+    role="status"
+    aria-live="polite"
+    class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm font-medium bg-espresso text-linen shadow-floating opacity-0 pointer-events-none transition-all duration-300 translate-y-2 max-w-[92vw] text-center"
+  ></div>
+
+  <!-- Order Detail Modal with Live Status Stepper -->
+  <div
+    id="order-detail-modal"
+    class="fixed inset-0 z-50 bg-espresso/45 backdrop-blur-xs hidden items-center justify-center p-4"
+    onclick="if(event.target===this) closeModal('order-detail-modal')"
+  >
+    <div class="bg-linen border border-sand rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-floating animate-pop max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-4 border-b border-sand pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span id="detail-order-id" class="font-mono text-xs px-2.5 py-0.5 rounded-full bg-cream border border-sand text-umber"></span>
+            <span id="detail-status-badge" class="font-mono text-xs px-2.5 py-0.5 rounded-full font-semibold"></span>
+          </div>
+          <h3 id="detail-garment-title" class="font-serif text-2xl font-semibold text-espresso mt-1.5"></h3>
+        </div>
+        <button
+          type="button"
+          onclick="closeModal('order-detail-modal')"
+          class="w-9 h-9 rounded-full bg-cream hover:bg-sand text-espresso flex items-center justify-center font-semibold cursor-pointer"
+          aria-label="Close modal"
+        >
+          ✕
+        </button>
+      </div>
+
+      <!-- 4-Stage Status Stepper -->
+      <div id="detail-stepper" class="my-5"></div>
+
+      <!-- Location Callout -->
+      <div id="detail-location-banner" class="rounded-2xl bg-cream border border-sand px-4 py-3 text-sm text-umber mb-5"></div>
+
+      <!-- Order & Customer Measurements Grid -->
+      <div id="detail-body" class="space-y-4 text-sm"></div>
+
+      <div id="detail-footer-actions" class="mt-6 pt-4 border-t border-sand flex flex-wrap items-center justify-end gap-2.5"></div>
+    </div>
+  </div>
+
+  <!-- Generic Form / Action Modal -->
+  <div
+    id="form-modal"
+    class="fixed inset-0 z-50 bg-espresso/45 backdrop-blur-xs hidden items-center justify-center p-4"
+    onclick="if(event.target===this) closeModal('form-modal')"
+  >
+    <div class="bg-linen border border-sand rounded-3xl max-w-xl w-full p-6 sm:p-7 shadow-floating animate-pop max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between gap-4 border-b border-sand pb-3.5">
+        <div>
+          <h3 id="form-modal-title" class="font-serif text-2xl font-semibold text-espresso"></h3>
+          <p id="form-modal-hint" class="text-xs text-muted mt-1"></p>
+        </div>
+        <button
+          type="button"
+          onclick="closeModal('form-modal')"
+          class="w-9 h-9 rounded-full bg-cream hover:bg-sand text-espresso flex items-center justify-center font-semibold cursor-pointer"
+          aria-label="Close form modal"
+        >
+          ✕
+        </button>
+      </div>
+
+      <form id="dynamic-form" class="mt-5 space-y-4" onsubmit="handleFormSubmit(event)">
+        <div id="dynamic-form-fields" class="space-y-3.5"></div>
+        <div id="dynamic-form-error" class="text-xs font-medium text-terracotta min-h-[18px]"></div>
+        <div class="pt-2 flex items-center justify-end gap-2.5">
+          <button
+            type="button"
+            onclick="closeModal('form-modal')"
+            class="px-4 py-2.5 rounded-full text-sm font-semibold bg-cream text-espresso border border-sand hover:bg-sand transition cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            id="dynamic-form-submit"
+            type="submit"
+            class="px-5 py-2.5 rounded-full text-sm font-semibold bg-terracotta text-white hover:bg-terracottaDark transition shadow-tactile cursor-pointer"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * THE ATELIER — CLIENT-SIDE WORKSHOP STATE & DATA STRUCTURES SIMULATION
+     * Mirrors the C++ tailoring workshop model:
+     *   - Customers: Singly-linked list semantics (unique ID 1..99999, name, phone,
+     *     measurements in cm: chest, waist, hips, inseam, sleeve).
+     *   - Orders: BST single source of truth (unique ID 1..99999, customerId,
+     *     garment, alteration, price in EGP 0..100000, status 0/1/2).
+     *   - Sewing Queue: FIFO circular array up to capacity 8 (status == 0 WAITING).
+     *   - Finished Stack: LIFO stack of completed orders awaiting pickup
+     *     (status == 1 COMPLETED). Picked-up orders have status == 2 (PICKED_UP).
+     * =========================================================================
+     */
+
+    const STATUS_WAITING = 0;
+    const STATUS_COMPLETED = 1;
+    const STATUS_PICKED_UP = 2;
+    const RACK_CAPACITY = 8;
+
+    const state = {
+      customers: [],     // Array of { id, name, phone, m: { chest, waist, hips, inseam, sleeve } }
+      orders: [],        // Array of { id, customerId, garment, alteration, price, status }
+      queue: [],         // FIFO array of order IDs (front is index 0, max 8)
+      stack: [],         // LIFO array of order IDs (last element is top of stack)
+      activeTab: 'orders',
+      customerSortMode: 'insertion', // 'insertion' | 'name' | 'id'
+      highlightedOrderId: null,
+      toastTimer: null,
+    };
+
+    function statusLabel(s) {
+      if (s === STATUS_WAITING) return 'WAITING';
+      if (s === STATUS_COMPLETED) return 'COMPLETED';
+      if (s === STATUS_PICKED_UP) return 'PICKED_UP';
+      return 'UNKNOWN';
+    }
+
+    function findCustomer(id) {
+      return state.customers.find((c) => c.id === Number(id)) || null;
+    }
+
+    function findOrder(id) {
+      return state.orders.find((o) => o.id === Number(id)) || null;
+    }
+
+    function countCustomerOrders(customerId) {
+      return state.orders.filter((o) => o.customerId === Number(customerId)).length;
+    }
+
+    function showToast(message, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = message;
+      el.className =
+        'fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm font-medium shadow-floating transition-all duration-300 max-w-[92vw] text-center opacity-100 translate-y-0 ' +
+        (isError ? 'bg-terracotta text-white' : 'bg-espresso text-linen');
+      clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => {
+        el.className =
+          'fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-full text-sm font-medium bg-espresso text-linen shadow-floating opacity-0 pointer-events-none transition-all duration-300 translate-y-2 max-w-[92vw] text-center';
+      }, 3800);
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal('order-detail-modal');
+        closeModal('form-modal');
+      }
+    });
+
+    /* ---------- BST Helper (for realistic height & preorder display) ---------- */
+    function buildBSTNodes() {
+      // Sorted by ID to mirror insertion / tree visualization cleanly
+      const sorted = [...state.orders].sort((a, b) => a.id - b.id);
+      function buildBalanced(arr) {
+        if (!arr.length) return null;
+        const mid = Math.floor(arr.length / 2);
+        return {
+          order: arr[mid],
+          left: buildBalanced(arr.slice(0, mid)),
+          right: buildBalanced(arr.slice(mid + 1)),
+        };
+      }
+      return buildBalanced(sorted);
+    }
+
+    function computeBSTHeight(node) {
+      if (!node) return 0;
+      return 1 + Math.max(computeBSTHeight(node.left), computeBSTHeight(node.right));
+    }
+
+    function preorderList(node, depth = 0, acc = []) {
+      if (!node) return acc;
+      acc.push({ order: node.order, depth });
+      preorderList(node.left, depth + 1, acc);
+      preorderList(node.right, depth + 1, acc);
+      return acc;
+    }
+
+    /* ---------- Invariant Consistency Audit (I1 - I5) ---------- */
+    function auditInvariants() {
+      const issues = [];
+      const orderIds = state.orders.map((o) => o.id);
+      const uniqueOrderIds = new Set(orderIds);
+      if (orderIds.length !== uniqueOrderIds.size) {
+        issues.push('I1 violated: duplicate order ID detected.');
+      }
+
+      const waitingOrders = state.orders.filter((o) => o.status === STATUS_WAITING).map((o) => o.id);
+      if (
+        waitingOrders.length !== state.queue.length ||
+        !waitingOrders.every((id) => state.queue.includes(id)) ||
+        new Set(state.queue).size !== state.queue.length
+      ) {
+        issues.push('I2 violated: WAITING orders must match sewing queue 1-to-1.');
+      }
+
+      const completedOrders = state.orders.filter((o) => o.status === STATUS_COMPLETED).map((o) => o.id);
+      if (
+        completedOrders.length !== state.stack.length ||
+        !completedOrders.every((id) => state.stack.includes(id)) ||
+        new Set(state.stack).size !== state.stack.length
+      ) {
+        issues.push('I3 violated: COMPLETED orders must match finished stack 1-to-1.');
+      }
+
+      const pickedUpIds = state.orders.filter((o) => o.status === STATUS_PICKED_UP).map((o) => o.id);
+      if (pickedUpIds.some((id) => state.queue.includes(id) || state.stack.includes(id))) {
+        issues.push('I4 violated: PICKED_UP orders cannot remain in queue or stack.');
+      }
+
+      if (state.orders.some((o) => !findCustomer(o.customerId))) {
+        issues.push('I5 violated: every order must reference an existing customer.');
+      }
+
+      return { ok: issues.length === 0, issues };
+    }
+
+    function runConsistencyAudit(showPopup = false) {
+      const res = auditInvariants();
+      const dot = document.getElementById('stat-inv-dot');
+      const lbl = document.getElementById('stat-inv-label');
+      if (res.ok) {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-sage';
+        lbl.className = 'font-semibold text-sm text-sage';
+        lbl.textContent = 'VERIFIED OK';
+      } else {
+        dot.className = 'w-2.5 h-2.5 rounded-full bg-terracotta';
+        lbl.className = 'font-semibold text-sm text-terracotta';
+        lbl.textContent = 'CHECK FAILED';
+      }
+      if (showPopup) {
+        showToast(
+          res.ok
+            ? 'All workshop invariants (I1–I5) are consistent across BST, Queue, Stack & Customers.'
+            : res.issues[0],
+          !res.ok
+        );
+      }
+      return res;
+    }
+
+    /* ---------- Core Workshop Operations ---------- */
+    function addCustomerRecord(c) {
+      if (findCustomer(c.id)) {
+        return { ok: false, error: `Customer ID #${c.id} already exists. Duplicate IDs are rejected.` };
+      }
+      state.customers.push(c);
+      renderAll();
+      showToast(`Added customer #${c.id} (${c.name}).`);
+      return { ok: true };
+    }
+
+    function deleteCustomerRecord(id) {
+      const cust = findCustomer(id);
+      if (!cust) return { ok: false, error: `No customer found with ID #${id}.` };
+      const activeCount = countCustomerOrders(id);
+      if (activeCount > 0) {
+        return {
+          ok: false,
+          error: `Cannot delete ${cust.name} (#${id}): ${activeCount} order(s) still reference this customer.`,
+        };
+      }
+      state.customers = state.customers.filter((c) => c.id !== Number(id));
+      renderAll();
+      showToast(`Removed customer #${id} (${cust.name}).`);
+      return { ok: true };
+    }
+
+    function createOrderRecord(o) {
+      if (findOrder(o.id)) {
+        return { ok: false, error: `Order ID #${o.id} already exists. Duplicate IDs are rejected.` };
+      }
+      if (!findCustomer(o.customerId)) {
+        return { ok: false, error: `Customer #${o.customerId} does not exist. Add the customer first.` };
+      }
+      if (state.queue.length >= RACK_CAPACITY) {
+        return { ok: false, error: `Sewing rack is full (${RACK_CAPACITY}/${RACK_CAPACITY}). Sew a garment first.` };
+      }
+      const newOrder = {
+        id: Number(o.id),
+        customerId: Number(o.customerId),
+        garment: o.garment.trim(),
+        alteration: o.alteration.trim(),
+        price: Number(o.price),
+        status: STATUS_WAITING,
+      };
+      state.orders.push(newOrder);
+      state.queue.push(newOrder.id);
+      state.highlightedOrderId = newOrder.id;
+      renderAll();
+      showToast(`Order #${newOrder.id} (${newOrder.garment}) added to sewing queue #${state.queue.length}.`);
+      return { ok: true };
+    }
+
+    function updateOrderRecord(id, patch) {
+      const order = findOrder(id);
+      if (!order) return { ok: false, error: `No order found with ID #${id}.` };
+      if (order.status === STATUS_PICKED_UP) {
+        return { ok: false, error: `Order #${id} is already PICKED_UP and archived.` };
+      }
+      if (patch.customerId !== undefined && !findCustomer(patch.customerId)) {
+        return { ok: false, error: `Customer #${patch.customerId} does not exist.` };
+      }
+      if (patch.garment !== undefined) order.garment = patch.garment;
+      if (patch.alteration !== undefined) order.alteration = patch.alteration;
+      if (patch.price !== undefined) order.price = patch.price;
+      if (patch.customerId !== undefined) order.customerId = patch.customerId;
+      state.highlightedOrderId = order.id;
+      renderAll();
+      showToast(`Updated order #${order.id}.`);
+      return { ok: true };
+    }
+
+    function changeOrderIdRecord(oldId, newId) {
+      const order = findOrder(oldId);
+      if (!order) return { ok: false, error: `Order #${oldId} not found.` };
+      if (oldId === newId) return { ok: false, error: 'New order ID matches the current ID.' };
+      if (findOrder(newId)) return { ok: false, error: `Order ID #${newId} is already in use.` };
+
+      order.id = newId;
+      const qIdx = state.queue.indexOf(oldId);
+      if (qIdx !== -1) state.queue[qIdx] = newId;
+      const sIdx = state.stack.indexOf(oldId);
+      if (sIdx !== -1) state.stack[sIdx] = newId;
+      state.highlightedOrderId = newId;
+      renderAll();
+      showToast(`Re-keyed order #${oldId} → #${newId} while preserving rack/shelf position.`);
+      return { ok: true };
+    }
+
+    function deleteOrderRecord(id) {
+      const order = findOrder(id);
+      if (!order) return { ok: false, error: `No order found with ID #${id}.` };
+      state.queue = state.queue.filter((x) => x !== order.id);
+      state.stack = state.stack.filter((x) => x !== order.id);
+      state.orders = state.orders.filter((o) => o.id !== order.id);
+      renderAll();
+      showToast(`Deleted order #${id} from workshop.`);
+      return { ok: true };
+    }
+
+    function handleSewNext() {
+      if (!state.queue.length) {
+        showToast('Sewing queue is empty — nothing to sew.', true);
+        return;
+      }
+      const nextId = state.queue.shift();
+      const order = findOrder(nextId);
+      if (!order) return;
+
+      // Animate needle station briefly
+      const needle = document.getElementById('machine-needle-group');
+      needle.classList.add('needle-active');
+      document.getElementById('bench-status-text').textContent = `Stitching #${order.id} · ${order.garment}...`;
+      setTimeout(() => {
+        needle.classList.remove('needle-active');
+        renderAll();
+      }, 650);
+
+      order.status = STATUS_COMPLETED;
+      state.stack.push(order.id); // LIFO: pushed onto top of finished stack
+      state.highlightedOrderId = order.id;
+      renderAll();
+      showToast(`Sewed #${order.id} (${order.garment}) → moved to Finished Shelf (LIFO top).`);
+    }
+
+    function handleReworkLatest() {
+      if (!state.stack.length) {
+        showToast('Finished shelf is empty — nothing to rework.', true);
+        return;
+      }
+      if (state.queue.length >= RACK_CAPACITY) {
+        showToast(`Sewing rack is full (${RACK_CAPACITY}/${RACK_CAPACITY}); cannot re-queue for rework.`, true);
+        return;
+      }
+      const topId = state.stack.pop(); // LIFO: pop newest finished garment
+      const order = findOrder(topId);
+      if (!order) return;
+
+      order.status = STATUS_WAITING;
+      state.queue.push(order.id);
+      state.highlightedOrderId = order.id;
+      renderAll();
+      showToast(`QC Rework: popped #${order.id} (${order.garment}) & returned to sewing queue.`);
+    }
+
+    function pickupOrderRecord(id) {
+      const order = findOrder(id);
+      if (!order) return { ok: false, error: `No order found with ID #${id}.` };
+      if (order.status === STATUS_WAITING) {
+        return { ok: false, error: `Order #${id} is still WAITING in the sewing queue.` };
+      }
+      if (order.status === STATUS_PICKED_UP) {
+        return { ok: false, error: `Order #${id} has already been picked up.` };
+      }
+      state.stack = state.stack.filter((x) => x !== order.id);
+      order.status = STATUS_PICKED_UP;
+      renderAll();
+      showToast(`Order #${order.id} picked up! Collected ${order.price.toFixed(2)} EGP.`);
+      return { ok: true };
+    }
+
+    function loadSampleWorkshopData() {
+      const sampleCustomers = [
+        { id: 101, name: 'Mona Hassan', phone: '01001234567', m: { chest: 92, waist: 74, hips: 98, inseam: 78, sleeve: 58 } },
+        { id: 102, name: 'Ahmed Fathy', phone: '01112223334', m: { chest: 104, waist: 90, hips: 100, inseam: 82, sleeve: 63 } },
+        { id: 103, name: 'Sara Adel', phone: '01223344556', m: { chest: 86, waist: 68, hips: 94, inseam: 76, sleeve: 56 } },
+        { id: 104, name: 'Karim Nabil', phone: '01556677889', m: { chest: 110, waist: 96, hips: 104, inseam: 84, sleeve: 65 } },
+      ];
+
+      const sampleOrders = [
+        { id: 5005, customerId: 102, garment: 'Suit jacket', alteration: 'Shorten sleeves 2 cm', price: 350 },
+        { id: 3003, customerId: 101, garment: 'Evening dress', alteration: 'Take in waist 3 cm', price: 420 },
+        { id: 7007, customerId: 103, garment: 'Jeans', alteration: 'Hem to 76 cm inseam', price: 120 },
+        { id: 2002, customerId: 104, garment: 'Shirt', alteration: 'Slim fit sides', price: 180 },
+        { id: 6006, customerId: 101, garment: 'Coat', alteration: 'Replace silk lining', price: 650 },
+      ];
+
+      let addedC = 0;
+      let addedO = 0;
+
+      for (const c of sampleCustomers) {
+        if (!findCustomer(c.id)) {
+          state.customers.push({ ...c, m: { ...c.m } });
+          addedC++;
+        }
+      }
+      for (const o of sampleOrders) {
+        if (!findOrder(o.id) && state.queue.length < RACK_CAPACITY) {
+          state.orders.push({ ...o, status: STATUS_WAITING });
+          state.queue.push(o.id);
+          addedO++;
+        }
+      }
+
+      renderAll();
+      if (addedC === 0 && addedO === 0) {
+        showToast('Sample workshop data is already loaded (duplicates skipped).');
+      } else {
+        showToast(`Loaded ${addedC} sample customer(s) and ${addedO} order(s).`);
+      }
+    }
+
+    /* ---------- Garment Artwork & Styling Helpers ---------- */
+    function garmentStyleProfile(garmentText) {
+      const g = (garmentText || '').toLowerCase();
+      if (g.includes('dress') || g.includes('gown')) {
+        return { kind: 'dress', fillTop: '#D49A9E', fillBot: '#A3666D', stroke: '#7B464D', label: 'Dress' };
+      }
+      if (g.includes('jacket') || g.includes('coat') || g.includes('suit') || g.includes('blazer')) {
+        return { kind: 'jacket', fillTop: '#C5A882', fillBot: '#8D7150', stroke: '#624B31', label: 'Outerwear' };
+      }
+      if (g.includes('pant') || g.includes('trouser') || g.includes('jean')) {
+        return { kind: 'pants', fillTop: '#647991', fillBot: '#3E5066', stroke: '#283546', label: 'Trousers' };
+      }
+      if (g.includes('skirt')) {
+        return { kind: 'skirt', fillTop: '#A482A1', fillBot: '#735370', stroke: '#4F354D', label: 'Skirt' };
+      }
+      if (g.includes('shirt') || g.includes('blouse') || g.includes('top')) {
+        return { kind: 'blouse', fillTop: '#BFD3C1', fillBot: '#849F8A', stroke: '#58725E', label: 'Top / Shirt' };
+      }
+      return { kind: 'other', fillTop: '#DFD4C2', fillBot: '#B0A18B', stroke: '#7D6F5B', label: 'Bespoke' };
+    }
+
+    function renderGarmentSVG(order, index = 0, compact = false) {
+      const prof = garmentStyleProfile(order.garment);
+      const cust = findCustomer(order.customerId);
+      const custFirst = cust ? cust.name.split(' ')[0] : `#${order.customerId}`;
+      const gradId = `grad-${prof.kind}-${order.id}-${compact ? 'm' : 'r'}`;
+
+      let bodyPath = '';
+      if (prof.kind === 'dress') {
+        bodyPath = `
+          <path d="M62 66 L69 66 Q80 86 91 66 L98 66 L105 114 C114 152 128 190 136 214 Q80 228 24 214 C32 190 46 152 55 114 Z" fill="url(#${gradId})" stroke="${prof.stroke}" stroke-width="1.5"/>
+          <path d="M55 112 Q80 123 105 112 L106 121 Q80 132 54 121 Z" fill="${prof.stroke}" opacity="0.75"/>
+          <path d="M28 211 Q80 225 132 211" stroke="#FFFDF8" stroke-width="1.2" stroke-dasharray="3 3" fill="none" opacity="0.75"/>
+        `;
+      } else if (prof.kind === 'jacket') {
+        bodyPath = `
+          <path d="M50 68 L68 62 L80 102 L92 62 L110 68 L132 84 L138 174 L122 176 L118 118 L116 196 Q80 203 44 196 L42 118 L38 176 L22 174 L28 84 Z" fill="url(#${gradId})" stroke="${prof.stroke}" stroke-width="1.5"/>
+          <path d="M68 62 L80 102 L62 116 L56 90 Z M92 62 L80 102 L98 116 L104 90 Z" fill="#FFFDF8" opacity="0.26" stroke="${prof.stroke}" stroke-width="1"/>
+          <circle cx="80" cy="130" r="3" fill="#FBF7F0" stroke="${prof.stroke}" stroke-width="1"/>
+          <circle cx="80" cy="156" r="3" fill="#FBF7F0" stroke="${prof.stroke}" stroke-width="1"/>
+        `;
+      } else if (prof.kind === 'pants') {
+        bodyPath = `
+          <path d="M48 72 H112 L120 216 H87 L80 126 L73 216 H40 Z" fill="url(#${gradId})" stroke="${prof.stroke}" stroke-width="1.5"/>
+          <rect x="47" y="66" width="66" height="10" rx="2.5" fill="${prof.stroke}"/>
+          <path d="M80 76 V112 Q80 121 72 119" stroke="#FFFDF8" stroke-width="1.2" fill="none" opacity="0.75"/>
+        `;
+      } else if (prof.kind === 'skirt') {
+        bodyPath = `
+          <path d="M56 74 H104 L130 214 Q80 228 30 214 Z" fill="url(#${gradId})" stroke="${prof.stroke}" stroke-width="1.5"/>
+          <rect x="55" y="68" width="50" height="9" rx="2.5" fill="${prof.stroke}"/>
+          <path d="M80 82 V222" stroke="#FFFDF8" stroke-width="1.1" stroke-dasharray="3 3" opacity="0.65"/>
+        `;
+      } else if (prof.kind === 'blouse') {
+        bodyPath = `
+          <path d="M52 68 L68 62 Q80 77 92 62 L108 68 L138 110 L122 125 L106 102 L106 192 Q80 198 54 192 L54 102 L38 125 L22 110 Z" fill="url(#${gradId})" stroke="${prof.stroke}" stroke-width="1.5"/>
+          <path d="M80 76 V193" stroke="#FFFDF8" stroke-width="1.1" stroke-dasharray="2.5 3.5" opacity="0.7"/>
+        `;
+      } else {
+        bodyPath = `
+          <path d="M52 66 L68 62 Q80 74 92 62 L108 66 Q118 72 118 84 V206 Q118 218 106 218 H54 Q42 218 42 206 V84 Q42 72 52 66 Z" fill="url(#${gradId})" stroke="${prof.stroke}" stroke-width="1.5"/>
+          <path d="M80 78 V210" stroke="#FFFDF8" stroke-width="1.3" stroke-dasharray="4 3" opacity="0.75"/>
+        `;
+      }
+
+      if (compact) {
+        return `
+          <svg class="w-14 h-20 mx-auto" viewBox="0 0 160 226" fill="none">
+            <defs>
+              <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="${prof.fillTop}" />
+                <stop offset="100%" stop-color="${prof.fillBot}" />
+              </linearGradient>
+            </defs>
+            ${bodyPath}
+          </svg>
+        `;
+      }
+
+      const swayDelay = `${(-index * 0.65).toFixed(2)}s`;
+      const tagDelay = `${(-index * 0.65 - 0.5).toFixed(2)}s`;
+
+      return `
+        <svg
+          class="w-32 sm:w-36 h-44 mx-auto overflow-visible garment-sway"
+          style="--sway-delay: ${swayDelay}"
+          viewBox="0 0 160 236"
+          fill="none"
+        >
+          <defs>
+            <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="${prof.fillTop}" />
+              <stop offset="100%" stop-color="${prof.fillBot}" />
+            </linearGradient>
+          </defs>
+          <!-- Brass Hook & Wooden Hanger -->
+          <path d="M80 28 V20 Q80 7 92 7 Q102 7 102 16" stroke="#8A7968" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M80 28 L25 65 Q21 69 27 69 H133 Q139 69 135 65 Z" stroke="#9E6E3E" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+          <!-- Garment Body -->
+          ${bodyPath}
+          <!-- Swinging Atelier Price/Order Tag -->
+          <g class="tag-swing" style="--tag-delay: ${tagDelay}">
+            <path d="M128 69 Q135 90 130 108" stroke="#8A7968" stroke-width="1.3" fill="none"/>
+            <g transform="translate(130 108) rotate(5)">
+              <path d="M-19 0 H19 L23 6 V37 Q23 41 19 41 H-19 Q-23 41 -23 37 V6 Z" fill="#F3E5C8" stroke="#B88938" stroke-width="1.1"/>
+              <circle cx="0" cy="6" r="2.2" fill="#FBF7F0" stroke="#B88938" stroke-width="0.9"/>
+              <text x="0" y="21" text-anchor="middle" font-family="Plus Jakarta Sans, sans-serif" font-size="9.5" font-weight="700" fill="#2B2118">${custFirst.slice(0, 7)}</text>
+              <text x="0" y="34" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8.5" fill="#5E4F40">#${order.id}</text>
+            </g>
+          </g>
+        </svg>
+      `;
+    }
+
+    /* ---------- Rendering Functions ---------- */
+    function renderStatsAndBench() {
+      const qLen = state.queue.length;
+      const sLen = state.stack.length;
+      const topId = sLen ? state.stack[sLen - 1] : null;
+      const topOrder = topId ? findOrder(topId) : null;
+      const bstRoot = buildBSTNodes();
+      const height = computeBSTHeight(bstRoot);
+
+      const collectedRevenue = state.orders
+        .filter((o) => o.status === STATUS_PICKED_UP)
+        .reduce((sum, o) => sum + o.price, 0);
+
+      document.getElementById('badge-queue-count').textContent = qLen;
+      document.getElementById('stat-queue').textContent = `${qLen} / ${RACK_CAPACITY}`;
+      const qTag = document.getElementById('stat-queue-tag');
+      if (qLen === 0) {
+        qTag.textContent = 'Empty';
+        qTag.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-cream text-muted';
+      } else if (qLen >= RACK_CAPACITY) {
+        qTag.textContent = 'FULL';
+        qTag.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-terracotta/15 text-terracotta font-semibold';
+      } else {
+        qTag.textContent = 'Active';
+        qTag.className = 'text-[11px] font-mono px-2 py-0.5 rounded-full bg-sageLight text-sage font-medium';
+      }
+
+      document.getElementById('stat-stack').textContent = sLen;
+      document.getElementById('stat-stack-top').textContent = topOrder ? `Top: #${topOrder.id}` : 'Top: —';
+
+      document.getElementById('stat-orders').textContent = state.orders.length;
+      document.getElementById('stat-height').textContent = `h = ${height}`;
+
+      document.getElementById('stat-revenue').textContent = collectedRevenue.toFixed(2);
+      document.getElementById('rack-caption').textContent = `${qLen} of ${RACK_CAPACITY} hooks occupied · FIFO order`;
+      document.getElementById('shelf-count-label').textContent = `${sLen} ${sLen === 1 ? 'garment' : 'garments'}`;
+
+      const frontOrder = qLen ? findOrder(state.queue[0]) : null;
+      document.getElementById('bench-next-order').textContent = frontOrder
+        ? `Next up: #${frontOrder.id} (${frontOrder.garment})`
+        : 'Next up: None';
+
+      runConsistencyAudit(false);
+    }
+
+    function renderRack() {
+      const grid = document.getElementById('rack-grid');
+      const cards = [];
+
+      for (let i = 0; i < RACK_CAPACITY; i++) {
+        const orderId = state.queue[i];
+        if (orderId !== undefined) {
+          const order = findOrder(orderId);
+          const cust = findCustomer(order.customerId);
+          const isNext = i === 0;
+          const isHighlighted = state.highlightedOrderId === order.id;
+
+          cards.push(`
+            <div
+              role="button"
+              tabindex="0"
+              onclick="openOrderDetail(${order.id})"
+              onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); openOrderDetail(${order.id}); }"
+              class="hanger-card animate-pop group relative rounded-2xl p-2.5 text-center cursor-pointer transition hover:bg-cream/80 focus:outline-none focus:ring-2 focus:ring-terracotta ${
+                isHighlighted ? 'ring-2 ring-brass bg-brassLight/40' : ''
+              }"
+            >
+              ${
+                isNext
+                  ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-terracotta text-white next-badge-pulse mb-1">
+                       Next · #1
+                     </span>`
+                  : `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-mono text-muted bg-cream mb-1">
+                       Hook #${i + 1}
+                     </span>`
+              }
+              ${renderGarmentSVG(order, i, false)}
+              <div class="mt-1 px-1">
+                <div class="font-semibold text-xs sm:text-sm text-espresso truncate group-hover:text-terracotta transition-colors">
+                  ${escapeHtml(order.garment)}
+                </div>
+                <div class="text-[11px] text-muted truncate" title="${escapeHtml(order.alteration)}">
+                  ${escapeHtml(order.alteration)}
+                </div>
+                <div class="mt-1 flex items-center justify-center gap-1.5 text-[10px] font-mono text-umber">
+                  <span>#${order.id}</span>
+                  <span>·</span>
+                  <span>${escapeHtml(cust ? cust.name.split(' ')[0] : 'Cust')}</span>
+                </div>
+              </div>
+            </div>
+          `);
+        } else {
+          cards.push(`
+            <div class="rounded-2xl p-2.5 flex flex-col items-center justify-center min-h-[235px] border border-dashed border-sand/90 bg-linen/50 text-muted/60 select-none">
+              <div class="w-2.5 h-2.5 rounded-full bg-sand mb-2"></div>
+              <span class="text-[11px] font-mono">Empty Hook</span>
+              <span class="text-[10px] font-mono opacity-75 mt-0.5">#${i + 1}</span>
+            </div>
+          `);
+        }
+      }
+
+      grid.innerHTML = cards.join('');
+    }
+
+    function renderFinishedShelf() {
+      const shelf = document.getElementById('finished-shelf');
+      if (!state.stack.length) {
+        shelf.innerHTML = `
+          <div class="w-full py-6 text-center text-sm text-muted">
+            No completed garments awaiting pickup right now. Click <strong class="text-espresso">Sew Next</strong> to stitch the front order.
+          </div>
+        `;
+        return;
+      }
+
+      // Render from top of stack (newest finished) down so LIFO order is immediately clear
+      const reversed = [...state.stack].reverse();
+      shelf.innerHTML = reversed
+        .map((orderId, idx) => {
+          const order = findOrder(orderId);
+          const cust = findCustomer(order.customerId);
+          const isTop = idx === 0;
+          return `
+            <button
+              type="button"
+              onclick="openOrderDetail(${order.id})"
+              class="animate-pop group text-left bg-white hover:bg-linen border ${
+                isTop ? 'border-sage ring-2 ring-sage/20' : 'border-sand'
+              } rounded-2xl p-3 shadow-sm hover:shadow-tactile transition flex items-center gap-3 cursor-pointer min-w-[215px]"
+            >
+              <div class="w-14 h-18 rounded-xl bg-cream flex items-center justify-center shrink-0">
+                ${renderGarmentSVG(order, idx, true)}
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-mono text-xs font-semibold text-espresso">#${order.id}</span>
+                  ${
+                    isTop
+                      ? `<span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sage text-white">TOP</span>`
+                      : `<span class="text-[10px] font-mono text-muted">depth ${idx + 1}</span>`
+                  }
+                </div>
+                <div class="font-semibold text-sm text-espresso truncate group-hover:text-sage transition-colors">
+                  ${escapeHtml(order.garment)}
+                </div>
+                <div class="text-xs text-muted truncate">${escapeHtml(cust ? cust.name : '')}</div>
+                <div class="text-xs font-mono font-semibold text-terracotta mt-0.5">${order.price.toFixed(2)} EGP</div>
+              </div>
+            </button>
+          `;
+        })
+        .join('');
+    }
+
+    function switchLedgerTab(tabName) {
+      state.activeTab = tabName;
+      document.querySelectorAll('.ledger-tab').forEach((btn) => {
+        const isCurrent = btn.id === `tab-${tabName}`;
+        btn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+        btn.className =
+          'ledger-tab px-4 py-2 rounded-full text-sm font-semibold transition cursor-pointer ' +
+          (isCurrent ? 'bg-espresso text-linen shadow-sm' : 'bg-cream text-umber hover:text-espresso');
+      });
+      renderLedger();
+    }
+
+    function openWorkspaceDrawer(tabName) {
+      switchLedgerTab(tabName);
+      document.querySelector('[aria-label="Workshop Records and Data Structures"]').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function renderLedger() {
+      const actionsEl = document.getElementById('tab-actions');
+      const contentEl = document.getElementById('ledger-content');
+
+      if (state.activeTab === 'orders') {
+        actionsEl.innerHTML = `
+          <button type="button" onclick="openNewOrderModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-terracotta text-white hover:bg-terracottaDark cursor-pointer">
+            + Add Order
+          </button>
+          <button type="button" onclick="openCorrectOrderIdModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-cream text-espresso border border-sand hover:border-brass cursor-pointer">
+            Re-key ID
+          </button>
+        `;
+
+        const sortedOrders = [...state.orders].sort((a, b) => a.id - b.id);
+        if (!sortedOrders.length) {
+          contentEl.innerHTML = `
+            <div class="py-10 text-center text-sm text-muted">
+              No orders in the BST yet. Click <strong class="text-espresso">Sample Data</strong> or <strong class="text-espresso">+ New Order</strong> to begin.
+            </div>
+          `;
+          return;
+        }
+
+        contentEl.innerHTML = `
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="border-b border-sand text-[11px] font-mono uppercase tracking-wider text-muted">
+                  <th class="py-2.5 px-3">Order ID</th>
+                  <th class="py-2.5 px-3">Customer</th>
+                  <th class="py-2.5 px-3">Garment</th>
+                  <th class="py-2.5 px-3">Alteration</th>
+                  <th class="py-2.5 px-3 text-right">Price (EGP)</th>
+                  <th class="py-2.5 px-3">Status</th>
+                  <th class="py-2.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-sand/70">
+                ${sortedOrders
+                  .map((o) => {
+                    const cust = findCustomer(o.customerId);
+                    const badgeClass =
+                      o.status === STATUS_WAITING
+                        ? 'bg-brassLight text-espresso'
+                        : o.status === STATUS_COMPLETED
+                        ? 'bg-sageLight text-sage'
+                        : 'bg-cream text-muted';
+                    return `
+                      <tr class="hover:bg-cream/50 transition">
+                        <td class="py-3 px-3 font-mono font-semibold text-espresso">#${o.id}</td>
+                        <td class="py-3 px-3 text-umber">${escapeHtml(cust ? `${cust.name} (#${cust.id})` : `#${o.customerId}`)}</td>
+                        <td class="py-3 px-3 font-semibold text-espresso">${escapeHtml(o.garment)}</td>
+                        <td class="py-3 px-3 text-muted max-w-[240px] truncate">${escapeHtml(o.alteration)}</td>
+                        <td class="py-3 px-3 font-mono text-right font-medium text-espresso">${o.price.toFixed(2)}</td>
+                        <td class="py-3 px-3">
+                          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold ${badgeClass}">
+                            ${statusLabel(o.status)}
+                          </span>
+                        </td>
+                        <td class="py-3 px-3 text-right whitespace-nowrap space-x-1">
+                          <button type="button" onclick="openOrderDetail(${o.id})" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream hover:bg-sand text-espresso cursor-pointer">
+                            Inspect
+                          </button>
+                          ${
+                            o.status !== STATUS_PICKED_UP
+                              ? `<button type="button" onclick="openEditOrderModal(${o.id})" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-cream hover:bg-sand text-umber cursor-pointer">
+                                   Edit
+                                 </button>`
+                              : ''
+                          }
+                          <button type="button" onclick="confirmDeleteOrder(${o.id})" class="px-2.5 py-1 rounded-lg text-xs font-medium text-terracotta hover:bg-terracotta/10 cursor-pointer">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    `;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (state.activeTab === 'customers') {
+        actionsEl.innerHTML = `
+          <button type="button" onclick="sortCustomersBy('name')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-cream text-espresso border border-sand hover:border-espresso cursor-pointer">
+            Sort by Name
+          </button>
+          <button type="button" onclick="sortCustomersBy('id')" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-cream text-espresso border border-sand hover:border-espresso cursor-pointer">
+            Sort by ID
+          </button>
+          <button type="button" onclick="openAddCustomerModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-terracotta text-white hover:bg-terracottaDark cursor-pointer">
+            + Add Customer
+          </button>
+        `;
+
+        let list = [...state.customers];
+        if (state.customerSortMode === 'name') {
+          list.sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id);
+        } else if (state.customerSortMode === 'id') {
+          list.sort((a, b) => a.id - b.id);
+        }
+
+        if (!list.length) {
+          contentEl.innerHTML = `
+            <div class="py-10 text-center text-sm text-muted">
+              No customers on file yet. Add a customer with body measurements (cm) or click <strong class="text-espresso">Sample Data</strong>.
+            </div>
+          `;
+          return;
+        }
+
+        contentEl.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${list
+              .map((c) => {
+                const orderCount = countCustomerOrders(c.id);
+                return `
+                  <div class="rounded-2xl bg-cream/65 border border-sand p-4 flex flex-col justify-between gap-3">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <div class="flex items-center gap-2">
+                          <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded-full bg-white border border-sand text-umber">#${c.id}</span>
+                          <h4 class="font-serif text-lg font-semibold text-espresso">${escapeHtml(c.name)}</h4>
+                        </div>
+                        <p class="text-xs font-mono text-muted mt-1">${escapeHtml(c.phone)} · ${orderCount} order(s)</p>
+                      </div>
+                      <button
+                        type="button"
+                        onclick="handleDeleteCustomerClick(${c.id})"
+                        class="px-2.5 py-1 rounded-lg text-xs font-medium text-terracotta hover:bg-terracotta/10 cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+
+                    <!-- Measurements Strip (cm) -->
+                    <div class="grid grid-cols-5 gap-1.5 pt-2 border-t border-sand/80 text-center">
+                      <div class="bg-white rounded-xl py-1.5 px-1">
+                        <div class="text-[10px] font-mono text-muted">CHEST</div>
+                        <div class="text-xs font-mono font-semibold text-espresso">${c.m.chest}</div>
+                      </div>
+                      <div class="bg-white rounded-xl py-1.5 px-1">
+                        <div class="text-[10px] font-mono text-muted">WAIST</div>
+                        <div class="text-xs font-mono font-semibold text-espresso">${c.m.waist}</div>
+                      </div>
+                      <div class="bg-white rounded-xl py-1.5 px-1">
+                        <div class="text-[10px] font-mono text-muted">HIPS</div>
+                        <div class="text-xs font-mono font-semibold text-espresso">${c.m.hips}</div>
+                      </div>
+                      <div class="bg-white rounded-xl py-1.5 px-1">
+                        <div class="text-[10px] font-mono text-muted">INSEAM</div>
+                        <div class="text-xs font-mono font-semibold text-espresso">${c.m.inseam}</div>
+                      </div>
+                      <div class="bg-white rounded-xl py-1.5 px-1">
+                        <div class="text-[10px] font-mono text-muted">SLEEVE</div>
+                        <div class="text-xs font-mono font-semibold text-espresso">${c.m.sleeve}</div>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              })
+              .join('')}
+          </div>
+        `;
+      } else {
+        // BST Preorder & Invariants Tab
+        actionsEl.innerHTML = `
+          <button type="button" onclick="runConsistencyAudit(true)" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-sage text-white hover:opacity-95 cursor-pointer">
+            Run Consistency Check
+          </button>
+        `;
+
+        const root = buildBSTNodes();
+        const pre = preorderList(root);
+        const audit = auditInvariants();
+
+        contentEl.innerHTML = `
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="rounded-2xl bg-cream/65 border border-sand p-4">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="font-serif text-base font-semibold text-espresso">Order BST Preorder Snapshot</h4>
+                <span class="text-xs font-mono text-muted">Nodes: ${pre.length} · Height: ${computeBSTHeight(root)}</span>
+              </div>
+              ${
+                pre.length
+                  ? `<pre class="font-mono text-xs bg-white border border-sand rounded-xl p-3.5 overflow-x-auto text-espresso leading-relaxed">${pre
+                      .map(
+                        (item) =>
+                          `${'  '.repeat(item.depth)}[${item.order.id}] ${escapeHtml(item.order.garment)} (${statusLabel(
+                            item.order.status
+                          )} · ${item.order.price.toFixed(2)} EGP)`
+                      )
+                      .join('\n')}</pre>`
+                  : `<p class="text-xs text-muted py-4">BST is empty.</p>`
+              }
+            </div>
+
+            <div class="rounded-2xl bg-cream/65 border border-sand p-4 space-y-2.5">
+              <h4 class="font-serif text-base font-semibold text-espresso">Workshop Invariants (I1–I5)</h4>
+              <ul class="space-y-2 text-xs text-umber">
+                <li class="flex items-start gap-2">
+                  <span class="font-mono font-bold text-sage">I1</span>
+                  <span>Every order ID is unique and stored as a single source of truth.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="font-mono font-bold text-sage">I2</span>
+                  <span><code>status == WAITING</code> ↔ order ID resides once in the FIFO sewing queue (${state.queue.length}/${RACK_CAPACITY}).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="font-mono font-bold text-sage">I3</span>
+                  <span><code>status == COMPLETED</code> ↔ order ID resides once on the LIFO finished stack (${state.stack.length}).</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="font-mono font-bold text-sage">I4</span>
+                  <span><code>status == PICKED_UP</code> ⇒ order ID is in neither queue nor stack.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="font-mono font-bold text-sage">I5</span>
+                  <span>Every order's <code>customerId</code> points to an existing customer record.</span>
+                </li>
+              </ul>
+              <div class="pt-2 text-xs font-mono ${audit.ok ? 'text-sage font-semibold' : 'text-terracotta font-semibold'}">
+                Status: ${audit.ok ? 'ALL INVARIANTS SATISFIED' : audit.issues.join(' | ')}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function sortCustomersBy(mode) {
+      state.customerSortMode = mode;
+      renderLedger();
+      showToast(`Sorted customers by ${mode === 'name' ? 'name (case-insensitive)' : 'ID'}.`);
+    }
+
+    function handleDeleteCustomerClick(id) {
+      const res = deleteCustomerRecord(id);
+      if (!res.ok) showToast(res.error, true);
+    }
+
+    function confirmDeleteOrder(id) {
+      const res = deleteOrderRecord(id);
+      if (!res.ok) showToast(res.error, true);
+    }
+
+    /* ---------- Order Detail Modal + 4-Stage Stepper ---------- */
+    function openOrderDetail(orderId) {
+      const order = findOrder(orderId);
+      if (!order) return;
+      const cust = findCustomer(order.customerId);
+
+      document.getElementById('detail-order-id').textContent = `ORDER #${order.id}`;
+      const badge = document.getElementById('detail-status-badge');
+      badge.textContent = statusLabel(order.status);
+      badge.className =
+        'font-mono text-xs px-2.5 py-0.5 rounded-full font-semibold ' +
+        (order.status === STATUS_WAITING
+          ? 'bg-brassLight text-espresso'
+          : order.status === STATUS_COMPLETED
+          ? 'bg-sageLight text-sage'
+          : 'bg-cream text-muted');
+
+      document.getElementById('detail-garment-title').textContent = order.garment;
+
+      // Stepper stages: 0=Registered, 1=In Queue, 2=Sewn Ready, 3=Picked Up
+      const activeStep = order.status === STATUS_WAITING ? 1 : order.status === STATUS_COMPLETED ? 2 : 3;
+      const steps = ['Registered', 'Sewing Queue', 'Finished Shelf', 'Picked Up'];
+      document.getElementById('detail-stepper').innerHTML = `
+        <div class="grid grid-cols-4 gap-2 items-center">
+          ${steps
+            .map((label, idx) => {
+              const done = idx < activeStep;
+              const current = idx === activeStep;
+              const circleClass = current
+                ? 'bg-terracotta text-white ring-4 ring-terracotta/20'
+                : done
+                ? 'bg-sage text-white'
+                : 'bg-cream text-muted border border-sand';
+              const textClass = current ? 'text-espresso font-bold' : done ? 'text-sage font-semibold' : 'text-muted';
+              return `
+                <div class="flex flex-col items-center text-center">
+                  <div class="w-7 h-7 rounded-full text-xs font-mono font-bold flex items-center justify-center transition ${circleClass}">
+                    ${done ? '✓' : idx + 1}
+                  </div>
+                  <span class="text-[11px] mt-1.5 ${textClass}">${label}</span>
+                </div>
+              `;
+            })
+            .join('')}
+        </div>
+      `;
+
+      let locMsg = '';
+      if (order.status === STATUS_WAITING) {
+        const pos = state.queue.indexOf(order.id) + 1;
+        locMsg =
+          pos === 1
+            ? `Currently at the <strong>front of the sewing queue</strong> (#1 of ${state.queue.length}) — next up for stitching.`
+            : `Waiting in the sewing queue at <strong>position ${pos} of ${state.queue.length}</strong> (${pos - 1} garment(s) ahead).`;
+      } else if (order.status === STATUS_COMPLETED) {
+        const revIdx = [...state.stack].reverse().indexOf(order.id);
+        locMsg =
+          revIdx === 0
+            ? `Finished and sitting at the <strong>TOP of the LIFO finished shelf</strong>, ready for pickup or QC rework.`
+            : `Finished on the ready shelf at <strong>stack depth ${revIdx + 1} of ${state.stack.length}</strong>, awaiting pickup.`;
+      } else {
+        locMsg = `Delivered to customer and archived. Revenue of <strong>${order.price.toFixed(2)} EGP</strong> recorded.`;
+      }
+      document.getElementById('detail-location-banner').innerHTML = locMsg;
+
+      const measHtml = cust
+        ? `
+          <div class="rounded-2xl bg-white border border-sand p-4">
+            <div class="text-xs font-mono uppercase tracking-wider text-muted mb-2">
+              Customer · ${escapeHtml(cust.name)} (#${cust.id}) · ${escapeHtml(cust.phone)}
+            </div>
+            <div class="grid grid-cols-5 gap-2 text-center">
+              <div class="bg-cream/70 rounded-xl p-2"><div class="text-[10px] font-mono text-muted">CHEST</div><div class="font-mono font-semibold">${cust.m.chest} cm</div></div>
+              <div class="bg-cream/70 rounded-xl p-2"><div class="text-[10px] font-mono text-muted">WAIST</div><div class="font-mono font-semibold">${cust.m.waist} cm</div></div>
+              <div class="bg-cream/70 rounded-xl p-2"><div class="text-[10px] font-mono text-muted">HIPS</div><div class="font-mono font-semibold">${cust.m.hips} cm</div></div>
+              <div class="bg-cream/70 rounded-xl p-2"><div class="text-[10px] font-mono text-muted">INSEAM</div><div class="font-mono font-semibold">${cust.m.inseam} cm</div></div>
+              <div class="bg-cream/70 rounded-xl p-2"><div class="text-[10px] font-mono text-muted">SLEEVE</div><div class="font-mono font-semibold">${cust.m.sleeve} cm</div></div>
+            </div>
+          </div>
+        `
+        : '';
+
+      document.getElementById('detail-body').innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white border border-sand rounded-2xl p-4">
+          <div>
+            <div class="text-[11px] font-mono uppercase text-muted">Alteration Notes</div>
+            <div class="font-semibold text-espresso mt-0.5">${escapeHtml(order.alteration)}</div>
+          </div>
+          <div>
+            <div class="text-[11px] font-mono uppercase text-muted">Tailoring Fee</div>
+            <div class="font-mono text-base font-bold text-terracotta mt-0.5">${order.price.toFixed(2)} EGP</div>
+          </div>
+        </div>
+        ${measHtml}
+      `;
+
+      const footerActions = [];
+      if (order.status === STATUS_WAITING && state.queue[0] === order.id) {
+        footerActions.push(`
+          <button type="button" onclick="closeModal('order-detail-modal'); handleSewNext();" class="px-4 py-2 rounded-full text-xs font-semibold bg-espresso text-linen hover:bg-umber cursor-pointer">
+            Sew This Order Now
+          </button>
+        `);
+      }
+      if (order.status === STATUS_COMPLETED) {
+        footerActions.push(`
+          <button type="button" onclick="closeModal('order-detail-modal'); pickupOrderRecord(${order.id});" class="px-4 py-2 rounded-full text-xs font-semibold bg-sage text-white hover:opacity-95 cursor-pointer">
+            Mark Picked Up (${order.price.toFixed(2)} EGP)
+          </button>
+        `);
+      }
+      if (order.status !== STATUS_PICKED_UP) {
+        footerActions.push(`
+          <button type="button" onclick="closeModal('order-detail-modal'); openEditOrderModal(${order.id});" class="px-4 py-2 rounded-full text-xs font-semibold bg-cream text-espresso border border-sand hover:bg-sand cursor-pointer">
+            Edit Order
+          </button>
+        `);
+      }
+      footerActions.push(`
+        <button type="button" onclick="closeModal('order-detail-modal');" class="px-4 py-2 rounded-full text-xs font-semibold bg-white text-umber border border-sand hover:bg-cream cursor-pointer">
+          Close
+        </button>
+      `);
+      document.getElementById('detail-footer-actions').innerHTML = footerActions.join('');
+
+      openModal('order-detail-modal');
+    }
+
+    /* ---------- Form Modal Builder & Submission ---------- */
+    let activeFormContext = null;
+
+    function renderInputField(name, label, type = 'text', value = '', extraAttrs = '') {
+      return `
+        <div>
+          <label class="block text-xs font-medium text-umber mb-1">${label}</label>
+          <input
+            type="${type}"
+            name="${name}"
+            value="${escapeAttr(value)}"
+            ${extraAttrs}
+            class="w-full rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none px-3.5 py-2.5 text-sm text-espresso"
+          />
+        </div>
+      `;
+    }
+
+    function openNewOrderModal() {
+      const customerOptions = state.customers
+        .map((c) => `<option value="${c.id}">#${c.id} — ${escapeHtml(c.name)}</option>`)
+        .join('');
+
+      activeFormContext = { mode: 'create-order' };
+      document.getElementById('form-modal-title').textContent = 'New Tailoring Order';
+      document.getElementById('form-modal-hint').textContent =
+        'Order enters the sewing queue at the rear (FIFO) and is indexed in the order BST.';
+      document.getElementById('dynamic-form-submit').textContent = 'Create Order';
+      document.getElementById('dynamic-form-error').textContent = '';
+
+      document.getElementById('dynamic-form-fields').innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${renderInputField('id', 'Order ID (1–99999)', 'number', '', 'min="1" max="99999" placeholder="e.g. 4004"')}
+          <div>
+            <label class="block text-xs font-medium text-umber mb-1">Customer</label>
+            <select
+              name="customerId"
+              class="w-full rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none px-3.5 py-2.5 text-sm text-espresso"
+            >
+              ${
+                customerOptions
+                  ? customerOptions
+                  : `<option value="">No customers yet — add one first</option>`
+              }
+            </select>
+          </div>
+        </div>
+        ${renderInputField('garment', 'Garment (max 40 chars)', 'text', '', 'maxlength="40" placeholder="e.g. Linen blazer, Evening dress, Trousers"')}
+        ${renderInputField('alteration', 'Alteration Instructions (max 60 chars)', 'text', '', 'maxlength="60" placeholder="e.g. Taper waist 2.5 cm, shorten hem"')}
+        ${renderInputField('price', 'Price (EGP, 0–100000)', 'number', '', 'step="0.5" min="0" max="100000" placeholder="e.g. 280"')}
+      `;
+      openModal('form-modal');
+    }
+
+    function openEditOrderModal(orderId) {
+      const order = findOrder(orderId);
+      if (!order) return;
+      activeFormContext = { mode: 'edit-order', orderId: order.id };
+      document.getElementById('form-modal-title').textContent = `Edit Order #${order.id}`;
+      document.getElementById('form-modal-hint').textContent =
+        'Update garment, alteration note, or fee in EGP.';
+      document.getElementById('dynamic-form-submit').textContent = 'Update Order';
+      document.getElementById('dynamic-form-error').textContent = '';
+
+      document.getElementById('dynamic-form-fields').innerHTML = `
+        ${renderInputField('garment', 'Garment', 'text', order.garment, 'maxlength="40"')}
+        ${renderInputField('alteration', 'Alteration', 'text', order.alteration, 'maxlength="60"')}
+        ${renderInputField('price', 'Price (EGP)', 'number', order.price, 'step="0.5" min="0" max="100000"')}
+      `;
+      openModal('form-modal');
+    }
+
+    function openCorrectOrderIdModal() {
+      activeFormContext = { mode: 'rekey-order' };
+      document.getElementById('form-modal-title').textContent = 'Correct Order ID';
+      document.getElementById('form-modal-hint').textContent =
+        'Re-keys the order in the BST while preserving its position in the queue or finished shelf.';
+      document.getElementById('dynamic-form-submit').textContent = 'Apply New ID';
+      document.getElementById('dynamic-form-error').textContent = '';
+
+      document.getElementById('dynamic-form-fields').innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${renderInputField('oldId', 'Current Order ID', 'number', '', 'min="1" max="99999"')}
+          ${renderInputField('newId', 'Corrected Order ID', 'number', '', 'min="1" max="99999"')}
+        </div>
+      `;
+      openModal('form-modal');
+    }
+
+    function openAddCustomerModal() {
+      activeFormContext = { mode: 'add-customer' };
+      document.getElementById('form-modal-title').textContent = 'Add Customer & Measurements';
+      document.getElementById('form-modal-hint').textContent =
+        'All body measurements are stored in centimetres (cm).';
+      document.getElementById('dynamic-form-submit').textContent = 'Save Customer';
+      document.getElementById('dynamic-form-error').textContent = '';
+
+      document.getElementById('dynamic-form-fields').innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          ${renderInputField('id', 'Customer ID (1–99999)', 'number', '', 'min="1" max="99999" placeholder="105"')}
+          <div class="sm:col-span-2">
+            ${renderInputField('name', 'Full Name', 'text', '', 'maxlength="40" placeholder="e.g. Layla Mansour"')}
+          </div>
+        </div>
+        ${renderInputField('phone', 'Phone Number', 'text', '', 'maxlength="20" placeholder="e.g. 01098765432"')}
+        <div class="rounded-2xl bg-cream p-3.5 border border-sand">
+          <div class="text-xs font-semibold text-espresso mb-2.5">Body Measurements (cm)</div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            ${renderInputField('chest', 'Chest (30–200)', 'number', '90', 'step="0.5" min="30" max="200"')}
+            ${renderInputField('waist', 'Waist (30–200)', 'number', '72', 'step="0.5" min="30" max="200"')}
+            ${renderInputField('hips', 'Hips (30–200)', 'number', '96', 'step="0.5" min="30" max="200"')}
+            ${renderInputField('inseam', 'Inseam (30–130)', 'number', '78', 'step="0.5" min="30" max="130"')}
+            ${renderInputField('sleeve', 'Sleeve (30–100)', 'number', '59', 'step="0.5" min="30" max="100"')}
+          </div>
+        </div>
+      `;
+      openModal('form-modal');
+    }
+
+    function openPickupModal() {
+      const completedOrders = state.orders.filter((o) => o.status === STATUS_COMPLETED);
+      const options = completedOrders
+        .map((o) => {
+          const c = findCustomer(o.customerId);
+          return `<option value="${o.id}">#${o.id} — ${escapeHtml(o.garment)} (${escapeHtml(
+            c ? c.name : ''
+          )} · ${o.price.toFixed(2)} EGP)</option>`;
+        })
+        .join('');
+
+      activeFormContext = { mode: 'pickup-order' };
+      document.getElementById('form-modal-title').textContent = 'Customer Pickup';
+      document.getElementById('form-modal-hint').textContent =
+        'Marks a COMPLETED garment as PICKED_UP, removes it from the finished shelf, and collects payment.';
+      document.getElementById('dynamic-form-submit').textContent = 'Confirm Pickup';
+      document.getElementById('dynamic-form-error').textContent = '';
+
+      document.getElementById('dynamic-form-fields').innerHTML = completedOrders.length
+        ? `
+          <div>
+            <label class="block text-xs font-medium text-umber mb-1">Select Finished Garment</label>
+            <select
+              name="orderId"
+              class="w-full rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none px-3.5 py-2.5 text-sm text-espresso"
+            >
+              ${options}
+            </select>
+          </div>
+        `
+        : `<p class="text-sm text-muted py-2">No orders are currently in COMPLETED status on the finished shelf.</p>`;
+
+      openModal('form-modal');
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      if (!activeFormContext) return;
+      const errEl = document.getElementById('dynamic-form-error');
+      errEl.textContent = '';
+
+      const fd = new FormData(e.target);
+      const ctx = activeFormContext;
+
+      if (ctx.mode === 'create-order') {
+        const id = Number(fd.get('id'));
+        const customerId = Number(fd.get('customerId'));
+        const garment = String(fd.get('garment') || '').trim();
+        const alteration = String(fd.get('alteration') || '').trim();
+        const price = Number(fd.get('price'));
+
+        if (!Number.isInteger(id) || id < 1 || id > 99999) {
+          errEl.textContent = 'Order ID must be a whole number from 1 to 99999.';
+          return;
+        }
+        if (!customerId) {
+          errEl.textContent = 'Please select an existing customer.';
+          return;
+        }
+        if (!garment || !alteration) {
+          errEl.textContent = 'Garment and alteration fields are required.';
+          return;
+        }
+        if (Number.isNaN(price) || price < 0 || price > 100000) {
+          errEl.textContent = 'Price must be between 0 and 100,000 EGP.';
+          return;
+        }
+
+        const res = createOrderRecord({ id, customerId, garment, alteration, price });
+        if (!res.ok) {
+          errEl.textContent = res.error;
+          return;
+        }
+        closeModal('form-modal');
+      } else if (ctx.mode === 'edit-order') {
+        const garment = String(fd.get('garment') || '').trim();
+        const alteration = String(fd.get('alteration') || '').trim();
+        const price = Number(fd.get('price'));
+        if (!garment || !alteration) {
+          errEl.textContent = 'Garment and alteration cannot be empty.';
+          return;
+        }
+        if (Number.isNaN(price) || price < 0 || price > 100000) {
+          errEl.textContent = 'Price must be between 0 and 100,000 EGP.';
+          return;
+        }
+        const res = updateOrderRecord(ctx.orderId, { garment, alteration, price });
+        if (!res.ok) {
+          errEl.textContent = res.error;
+          return;
+        }
+        closeModal('form-modal');
+      } else if (ctx.mode === 'rekey-order') {
+        const oldId = Number(fd.get('oldId'));
+        const newId = Number(fd.get('newId'));
+        if (!Number.isInteger(oldId) || !Number.isInteger(newId) || newId < 1 || newId > 99999) {
+          errEl.textContent = 'Both IDs must be valid integers between 1 and 99999.';
+          return;
+        }
+        const res = changeOrderIdRecord(oldId, newId);
+        if (!res.ok) {
+          errEl.textContent = res.error;
+          return;
+        }
+        closeModal('form-modal');
+      } else if (ctx.mode === 'add-customer') {
+        const id = Number(fd.get('id'));
+        const name = String(fd.get('name') || '').trim();
+        const phone = String(fd.get('phone') || '').trim();
+        const chest = Number(fd.get('chest'));
+        const waist = Number(fd.get('waist'));
+        const hips = Number(fd.get('hips'));
+        const inseam = Number(fd.get('inseam'));
+        const sleeve = Number(fd.get('sleeve'));
+
+        if (!Number.isInteger(id) || id < 1 || id > 99999) {
+          errEl.textContent = 'Customer ID must be between 1 and 99999.';
+          return;
+        }
+        if (!name || !phone) {
+          errEl.textContent = 'Name and phone number are required.';
+          return;
+        }
+        if (
+          [chest, waist, hips].some((v) => Number.isNaN(v) || v < 30 || v > 200) ||
+          Number.isNaN(inseam) ||
+          inseam < 30 ||
+          inseam > 130 ||
+          Number.isNaN(sleeve) ||
+          sleeve < 30 ||
+          sleeve > 100
+        ) {
+          errEl.textContent = 'Check measurement ranges (Chest/Waist/Hips 30–200, Inseam 30–130, Sleeve 30–100 cm).';
+          return;
+        }
+
+        const res = addCustomerRecord({
+          id,
+          name,
+          phone,
+          m: { chest, waist, hips, inseam, sleeve },
+        });
+        if (!res.ok) {
+          errEl.textContent = res.error;
+          return;
+        }
+        closeModal('form-modal');
+      } else if (ctx.mode === 'pickup-order') {
+        const orderId = Number(fd.get('orderId'));
+        if (!orderId) {
+          closeModal('form-modal');
+          return;
+        }
+        const res = pickupOrderRecord(orderId);
+        if (!res.ok) {
+          errEl.textContent = res.error;
+          return;
+        }
+        closeModal('form-modal');
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str).replace(/'/g, '&#39;');
+    }
+
+    function renderAll() {
+      renderStatsAndBench();
+      renderRack();
+      renderFinishedShelf();
+      renderLedger();
+    }
+
+    // Boot with sample workshop data so the rack, finished shelf, customers, and stats are immediately alive
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSampleWorkshopData();
+      // Stitch one garment initially so the Finished Shelf (LIFO) & Revenue/Completed stats are also demonstrable right away
+      if (state.queue.length > 0) {
+        const firstId = state.queue.shift();
+        const firstOrder = findOrder(firstId);
+        if (firstOrder) {
+          firstOrder.status = STATUS_COMPLETED;
+          state.stack.push(firstOrder.id);
+        }
+      }
+      renderAll();
+    });
+  </script>
+</body>
+</html>

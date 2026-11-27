@@ -5,6 +5,10 @@
 
 --- بالعربي ---
 
+واجهة المتصفح (The Atelier):
+   دبل كليك على Open_Workshop_Interface.bat من فولدر المشروع،
+   أو افتح index.html. الواجهة مستقلة وبياناتها لا تتصل ببرنامج C++.
+
 1) فك الضغط عن ملف الـ ZIP الأول (كليك يمين > Extract All).
    ما تشغّلش البرنامج من جوه الـ ZIP نفسه.
 
@@ -26,6 +30,10 @@
    ./tailor
 
 --- English ---
+
+Browser interface (The Atelier):
+   Double-click Open_Workshop_Interface.bat in the repository folder,
+   or open index.html. It is a standalone demo and does not share data with the C++ program.
 
 1) Extract the ZIP first (right-click > Extract All).
    Do not run the program from inside the ZIP.
