@@ -2,6 +2,8 @@
 
 ## Browser interface
 
+[Open the live interface](https://mohamed65721.github.io/tailoring-workshop/)
+
 The repository root `index.html` opens the browser interface in [`atelier-interface/`](atelier-interface/). On Windows, double-click [`Open_Workshop_Interface.bat`](Open_Workshop_Interface.bat). The interface is a standalone demo with in-memory data; it does not read or write the C++ console application's data. Tailwind CSS and the fonts load from CDNs, so an internet connection is needed for the complete styling.
 
 This is a C++17 console application that runs a tailoring workshop. It keeps customer measurements on file and tracks each garment order from the sewing queue, through quality control, to customer pickup. All four data structures are written by hand. **No STL containers are used.**
